@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCADA - El Surtidor Cochabambino</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#0EA5E9',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Estilos personalizados para efectos SCADA e indicadores LED */
+    .led-indicator {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 10px currentColor;
+    }
+    .tank-fill {
+      transition: height 0.5s ease-in-out, background-color 0.5s ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-slate-900 text-slate-200 p-4 md:p-6 gap-6">
+
+  <!-- 1. HEADER SCADA -->
+  <header class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 bg-sky-500/10 border border-sky-500/30 rounded-lg text-sky-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          El Surtidor Cochabambino
+          <span class="text-xs font-mono font-normal bg-sky-500/20 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded">v1.0 SCADA</span>
+        </h1>
+        <p class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+          <span>📍 Cochabamba, Bolivia</span>
+          <span>•</span>
+          <span id="connection-status" class="flex items-center gap-1.5 text-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema en Línea
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Reloj digital industrial -->
+    <div class="flex items-center gap-4 bg-slate-900/80 px-4 py-2 rounded-lg border border-slate-700/60 font-mono">
+      <div class="text-right">
+        <div id="clock-time" class="text-lg font-bold text-sky-400 leading-none">00:00:00</div>
+        <div id="clock-date" class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">--/--/----</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- GRID PRINCIPAL DEL DASHBOARD -->
+  <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+    <!-- 2. SECCIÓN TANQUES (Monitoreo de Sensores Digitales) -->
+    <section class="lg:col-span-12">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-sky-400"></span> Monitoreo Digital de Tanques y Sensores
+        </h2>
+        <span class="text-xs font-mono text-slate-500">Decodificación Binaria Sensores S₁S₀</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="tanks-container">
+        <!-- Renderizado dinámico desde JS -->
+      </div>
+    </section>
+
+    <!-- 3. MÓDULO REGISTRO DE VENTAS -->
+    <section class="lg:col-span-5 flex flex-col">
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg flex-1">
+        <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-700 pb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Registro Rápido de Venta
+        </h2>
+
+        <form id="sale-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Placa del Vehículo</label>
+            <input type="text" id="plate" required placeholder="Ej. 4050-ABC" uppercase
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-sky-500 uppercase">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Combustible</label>
+              <select id="fuel-type" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500 text-sm">
+                <option value="GE" data-price="3.74">Gasolina Especial (GE)</option>
+                <option value="GP" data-price="4.79">Gasolina Premium (GP)</option>
+                <option value="DO" data-price="3.72">Diesel Oléico (DO)</option>
+                <option value="GNV" data-price="1.66">GNV</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Método de Pago</label>
+              <select id="payment-method" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500 text-sm">
+                <option value="Efectivo">Efectivo</option>
+                <option value="QR">Pago QR</option>
+                <option value="Tarjeta">Tarjeta</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Litros / M³</label>
+              <input type="number" step="0.01" id="liters" required placeholder="0.00"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Total a Cobrar (BOB)</label>
+              <input type="text" id="total-bob" readonly placeholder="0.00 BOB"
+                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sky-400 font-mono font-bold readonly cursor-not-allowed">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 mt-2">
+            <span>Despachar y Registrar</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4. MÓDULO DE TRANSACCIONES E INGRESOS TOTALES -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+      
+      <!-- KPIS -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg">
+          <span class="text-xs text-slate-400 font-medium">Ingresos Totales (Hoy)</span>
+          <div id="kpi-total-money" class="text-2xl font-bold font-mono text-emerald-400 mt-1">0.00 BOB</div>
+        </div>
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg">
+          <span class="text-xs text-slate-400 font-medium">Litros Despachados (Hoy)</span>
+          <div id="kpi-total-liters" class="text-2xl font-bold font-mono text-sky-400 mt-1">0.00 L</div>
+        </div>
+      </div>
+
+      <!-- Tabla de Transacciones -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg flex-1 flex flex-col">
+        <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between items-center">
+          <span>Últimas Transacciones</span>
+          <span class="text-xs font-mono text-slate-500" id="tx-count">0 registros</span>
+        </h3>
+
+        <div class="overflow-x-auto flex-1">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="p-2.5">Hora</th>
+                <th class="p-2.5">Placa</th>
+                <th class="p-2.5">Tipo</th>
+                <th class="p-2.5 text-right">Litros</th>
+                <th class="p-2.5 text-right">Total (BOB)</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-tbody" class="divide-y divide-slate-700/50 text-slate-300">
+              <!-- Filas insertadas dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- LÓGICA JAVASCRIPT VANILLA CON MÓDULOS -->
+  <script type="module">
+    // CONFIGURACIÓN DE SUPABASE (Reemplazar con tus claves de proyecto)
+    const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+    const SUPABASE_KEY = 'tu-anon-key-de-supabase';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Estado local de los Tanques (Codificación Digital)
+    const tanksData = [
+      { id: 'GE', name: 'Gasolina Especial', binary: '11', percent: 100, price: 3.74 },
+      { id: 'GP', name: 'Gasolina Premium', binary: '10', percent: 50, price: 4.79 },
+      { id: 'DO', name: 'Diesel Oléico', binary: '01', percent: 25, price: 3.72 },
+      { id: 'GNV', name: 'GNV', binary: '00', percent: 5, price: 1.66 }
+    ];
+
+    let salesHistory = [];
+
+    // Decodificador de Estados Digitales (Compuertas Lógicas)
+    function decodeBinaryStatus(binary) {
+      switch (binary) {
+        case '11':
+          return { label: 'Óptimo (100%)', color: 'bg-emerald-500', text: 'text-emerald-400', border: 'border-emerald-500/30' };
+        case '10':
+          return { label: 'Medio (50%)', color: 'bg-sky-500', text: 'text-sky-400', border: 'border-sky-500/30' };
+        case '01':
+          return { label: 'Alerta Bajo (25%)', color: 'bg-amber-500', text: 'text-amber-400', border: 'border-amber-500/30' };
+        case '00':
+        default:
+          return { label: 'Crítico / Vacío', color: 'bg-rose-500', text: 'text-rose-400', border: 'border-rose-500/30' };
+      }
+    }
+
+    // Renderizado de Tarjetas de Tanques SCADA
+    function renderTanks() {
+      const container = document.getElementById('tanks-container');
+      container.innerHTML = tanksData.map(tank => {
+        const status = decodeBinaryStatus(tank.binary);
+        return `
+          <div class="bg-slate-800 border ${status.border} rounded-xl p-4 shadow-md flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="text-xs font-mono text-slate-400">${tank.id}</span>
+                <h3 class="font-bold text-white text-sm">${tank.name}</h3>
+              </div>
+              <div class="flex items-center gap-2 bg-slate-900 px-2 py-1 rounded border border-slate-700">
+                <span class="led-indicator ${status.color}"></span>
+                <span class="text-xs font-mono font-bold ${status.text}">${tank.binary}</span>
+              </div>
+            </div>
+
+            <!-- Gráfico de Tanque -->
+            <div class="flex items-end gap-3 my-2">
+              <div class="w-12 h-24 bg-slate-900 border border-slate-700 rounded-md p-0.5 flex flex-col justify-end overflow-hidden relative">
+                <div class="tank-fill w-full ${status.color} rounded-sm" style="height: ${tank.percent}%;"></div>
+              </div>
+              <div class="flex flex-col justify-center">
+                <span class="text-2xl font-mono font-bold text-white">${tank.percent}%</span>
+                <span class="text-[10px] ${status.text} font-mono uppercase">${status.label}</span>
+                <span class="text-[11px] text-slate-400 font-mono mt-1">${tank.price.toFixed(2)} BOB/L</span>
+              </div>
+            </div>
+
+            <!-- Botones de Simulación de Sensores Digitales -->
+            <div class="grid grid-cols-4 gap-1 mt-3 pt-3 border-t border-slate-700/60 text-[10px] font-mono">
+              <button onclick="updateTankLevel('${tank.id}', '00', 5)" class="bg-slate-900 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">00</button>
+              <button onclick="updateTankLevel('${tank.id}', '01', 25)" class="bg-slate-900 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">01</button>
+              <button onclick="updateTankLevel('${tank.id}', '10', 50)" class="bg-slate-900 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">10</button>
+              <button onclick="updateTankLevel('${tank.id}', '11', 100)" class="bg-slate-900 hover:bg-slate-700 text-slate-300 py-1 rounded border border-slate-700">11</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Cambiar estado de tanque dinámicamente
+    window.updateTankLevel = (tankId, binary, percent) => {
+      const tank = tanksData.find(t => t.id === tankId);
+      if (tank) {
+        tank.binary = binary;
+        tank.percent = percent;
+        renderTanks();
+      }
+    };
+
+    // Formateador de moneda en Bolivianos
+    const formatBOB = (val) => `${Number(val).toFixed(2)} BOB`;
+
+    // Calculadora dinámica de ventas
+    const litersInput = document.getElementById('liters');
+    const fuelSelect = document.getElementById('fuel-type');
+    const totalOutput = document.getElementById('total-bob');
+
+    function calculateTotal() {
+      const selectedOption = fuelSelect.options[fuelSelect.selectedIndex];
+      const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+      const liters = parseFloat(litersInput.value) || 0;
+      totalOutput.value = formatBOB(liters * price);
+    }
+
+    litersInput.addEventListener('input', calculateTotal);
+    fuelSelect.addEventListener('change', calculateTotal);
+
+    // Registro de Venta
+    document.getElementById('sale-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const plate = document.getElementById('plate').value.toUpperCase();
+      const fuelType = fuelSelect.value;
+      const liters = parseFloat(litersInput.value);
+      const selectedOption = fuelSelect.options[fuelSelect.selectedIndex];
+      const price = parseFloat(selectedOption.getAttribute('data-price'));
+      const total = liters * price;
+
+      const newSale = {
+        time: new Date().toLocaleTimeString('es-BO'),
+        plate,
+        fuelType,
+        liters,
+        total
+      };
+
+      salesHistory.unshift(newSale);
+      updateSalesTable();
+      e.target.reset();
+      totalOutput.value = '0.00 BOB';
+    });
+
+    // Actualizar Tabla y KPIs
+    function updateSalesTable() {
+      const tbody = document.getElementById('transactions-tbody');
+      const totalMoneyElem = document.getElementById('kpi-total-money');
+      const totalLitersElem = document.getElementById('kpi-total-liters');
+      const txCountElem = document.getElementById('tx-count');
+
+      tbody.innerHTML = salesHistory.map(sale => `
+        <tr class="hover:bg-slate-700/30 transition-colors">
+          <td class="p-2.5 text-slate-400">${sale.time}</td>
+          <td class="p-2.5 font-bold text-white">${sale.plate}</td>
+          <td class="p-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-700 text-sky-400">${sale.fuelType}</span></td>
+          <td class="p-2.5 text-right">${sale.liters.toFixed(2)} L</td>
+          <td class="p-2.5 text-right font-bold text-emerald-400">${formatBOB(sale.total)}</td>
+        </tr>
+      `).join('');
+
+      const totalBOB = salesHistory.reduce((acc, curr) => acc + curr.total, 0);
+      const totalLiters = salesHistory.reduce((acc, curr) => acc + curr.liters, 0);
+
+      totalMoneyElem.textContent = formatBOB(totalBOB);
+      totalLitersElem.textContent = `${totalLiters.toFixed(2)} L`;
+      txCountElem.textContent = `${salesHistory.length} registros`;
+    }
+
+    // Reloj digital en tiempo real
+    function startClock() {
+      const timeElem = document.getElementById('clock-time');
+      const dateElem = document.getElementById('clock-date');
+
+      setInterval(() => {
+        const now = new Date();
+        timeElem.textContent = now.toLocaleTimeString('es-BO');
+        dateElem.textContent = now.toLocaleDateString('es-BO', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+      }, 1000);
+    }
+
+    // Inicialización
+    startClock();
+    renderTanks();
+  </script>
+</body>
+</html>
