@@ -186,10 +186,12 @@
 
   <!-- LÓGICA JAVASCRIPT VANILLA CON MÓDULOS -->
   <script type="module">
-    // CONFIGURACIÓN DE SUPABASE (Reemplazar con tus claves de proyecto)
-    const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-    const SUPABASE_KEY = 'tu-anon-key-de-supabase';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // ✅ DESPUÉS (Corregido)
+const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+const SUPABASE_KEY = 'tu-anon-key-de-supabase';
+
+// Usamos el objeto global window.supabase o supabase de la CDN
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Estado local de los Tanques (Codificación Digital)
     const tanksData = [
