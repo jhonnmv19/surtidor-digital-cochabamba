@@ -1,0 +1,15 @@
+{
+  "name": "scada-surtidor-cochabambino",
+  "version": "1.0.0",
+  "description": "Sistema SCADA de Estación de Servicio con arquitectura MVC y Supabase",
+  "type": "module",
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/input.css -o ./css/output.css --watch"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
