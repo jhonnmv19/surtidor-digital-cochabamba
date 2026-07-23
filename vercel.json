@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!css/|js/|imagen/|views/|controllers/|models/|config/|sw.js|manifest.json).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -26,6 +29,10 @@
         {
           "key": "Content-Type",
           "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }
