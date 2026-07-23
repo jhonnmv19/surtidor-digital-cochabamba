@@ -1,7 +1,11 @@
 # ⛽ Sistema Digital de Control y Gestión para Surtidor de Gasolina
 ### *Estación de Servicio "El Surtidor Cochabambino"*
 
+[![Vercel Deployment](https://img.shields.io/badge/Demo%20en%20L%C3%ADnea-Vercel-000000?style=for-the-badge&logo=vercel)](https://surtidor-digital-cochabamba.vercel.app/)
+
 Un sistema multiplataforma e industrial para el monitoreo en tiempo real, control de inventario y gestión transaccional de combustibles, integrando fundamentos de **Sistemas Digitales** (lógica combinacional, codificación binaria y decodificadores), arquitectura moderna con **Supabase (PostgreSQL + Realtime)** e integración con **Herramientas de IA**.
+
+🔗 **Prototipo / Demo en Vivo:** [https://surtidor-digital-cochabamba.vercel.app/](https://surtidor-digital-cochabamba.vercel.app/)
 
 ---
 
@@ -12,8 +16,6 @@ Un sistema multiplataforma e industrial para el monitoreo en tiempo real, contro
 | **Dashboard SCADA** | ![Dashboard SCADA](imagen/daboarh.png) | Interfaz general de monitoreo en tiempo real para el control de tanques y surtidores. |
 | **Tabla de Combustibles** | ![Tabla Tipos de Combustible](imagen/captabla.png) | Verificación de datos e inventarios registrados en la tabla `tipo_combustible`. |
 | **Creación de Tablas** | ![Creación de Tablas Supabase](imagen/creacion_de_tablas.png) | Evidencia de la ejecución de scripts DDL y creación del esquema relacional en Supabase. |
-
-> **Nota:** Las imágenes se encuentran almacenadas localmente en la carpeta del proyecto: `imagen/`.
 
 ---
 
@@ -64,10 +66,8 @@ El nivel de combustible en cada tanque de la estación se digitaliza mediante un
 ### Simplificación Lógica mediante Mapas de Karnaugh
 Para activar las alarmas del panel físico mediante compuertas lógicas (`AND`, `OR`, `NOT`):
 
-- **Ecuación para LED Rojo ($F_{\text{Rojo}}$):**  
-  $$\bar{S_1} \cdot \bar{S_0}$$
-- **Ecuación para LED Amarillo ($F_{\text{Amarillo}}$):**  
-  $$\bar{S_1} \cdot S_0$$
+- **Ecuación para LED Rojo ($F_{\text{Rojo}}$):** $\bar{S_1} \cdot \bar{S_0}$
+- **Ecuación para LED Amarillo ($F_{\text{Amarillo}}$):** $\bar{S_1} \cdot S_0$
 
 ---
 
