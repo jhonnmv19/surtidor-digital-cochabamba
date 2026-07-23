@@ -5,7 +5,7 @@
 
 Un sistema multiplataforma e industrial para el monitoreo en tiempo real, control de inventario y gestión transaccional de combustibles, integrando fundamentos de **Sistemas Digitales** (lógica combinacional, codificación binaria y decodificadores), arquitectura moderna con **Supabase (PostgreSQL + Realtime)** e integración con **Herramientas de IA**.
 
-🔗 **Prototipo / Demo en Vivo:** [https://surtidor-digital-cochabamba.vercel.app/](https://surtidor-digital-cochabamba.vercel.app/)
+🔗 **Prototipo / Demo en Vivo:** [https://uxpilot.ai/s/a59911d947824f8b6347613638a7b69e](https://uxpilot.ai/s/a59911d947824f8b6347613638a7b69e)
 
 ---
 
