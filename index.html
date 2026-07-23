@@ -57,5 +57,18 @@
       MainController.init();
     });
   </script>
+  <script>
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Previene que Chrome mini-infobar aparezca automáticamente
+    e.preventDefault();
+    // Guarda el evento para que pueda ser disparado cuando el usuario lo desee
+    deferredPrompt = e;
+    console.log('PWA lista para ser instalada');
+    
+    // Aquí puedes mostrar tu propio botón personalizado de instalación si lo deseas
+  });
+</script>
 </body>
 </html>
