@@ -2,31 +2,23 @@
   "name": "Sistema Surtidor PWA",
   "short_name": "Surtidor",
   "description": "Gestión de surtidores, tanques, ventas y alertas",
-  "start_url": "./index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0eb6c2",
   "theme_color": "#2596be",
   "icons": [
     {
-      "src": "./imagen/yautja2.png",
+      "src": "/imagen/yautja2.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "./imagen/yautja1.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-
-    },
-     {
       "src": "/imagen/yautja2.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any" 
+      "purpose": "any"
     },
-
     {
       "src": "/imagen/yautja2-maskable.png",
       "sizes": "512x512",
