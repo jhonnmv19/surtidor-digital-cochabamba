@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>El Surtidor Cochabambino — SCADA</title>
   
+  <!-- PWA & Meta Tags -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/imagen/yautja1.png" />
+  <link rel="icon" type="image/png" href="/imagen/yautja1.png" />
+
   <!-- FontAwesome -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -14,7 +19,7 @@
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./css/input.css" />
+  <link rel="stylesheet" href="/css/input.css" />
 </head>
 <body>
 
@@ -25,11 +30,23 @@
   <!-- Contenedor Principal dinámico (Vistas) -->
   <main id="main-content"></main>
 
+  <!-- Script de Registro del Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // Usar '/sw.js' absoluto asegura que Vercel encuentre el archivo desde la raíz
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker en Vercel:', reg.scope))
+          .catch((err) => console.error('Error registrardo SW en Vercel:', err));
+      });
+    }
+  </script>
+
   <!-- Script principal de inicio (ES6 Modules) -->
   <script type="module">
-    import { renderSidebar } from './views/componentes/sidebar.js';
-    import { renderNavbar } from './views/componentes/navbar.js';
-    import { MainController } from './controllers/mainController.js';
+    import { renderSidebar } from '/views/componentes/sidebar.js';
+    import { renderNavbar } from '/views/componentes/navbar.js';
+    import { MainController } from '/controllers/mainController.js';
 
     document.addEventListener('DOMContentLoaded', () => {
       // Montar layout
