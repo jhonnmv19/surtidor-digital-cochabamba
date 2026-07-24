@@ -7,8 +7,7 @@
   "background_color": "#0eb6c2",
   "theme_color": "#2596be",
   "icons": [
-    {
-      "src": "/imagen/yautja2.png",
+    {"src": "/imagen/yautja2.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
