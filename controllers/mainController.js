@@ -1,7 +1,18 @@
 import { VentaModel } from '../models/ventaModel.js';
 import { SurtidorModel } from '../models/surtidorModel.js';
 import { renderDashboardView } from '../views/dashboardView.js';
+
+// Controladores
 import { SurtidorController } from './surtidorController.js';
+import { TanqueController } from './tanqueController.js';
+import { VentaController } from './ventaController.js';
+import { AlertaController } from './alertaController.js';
+import { VoiceController } from './voiceController.js';
+
+// Vistas directas (sin lógica compleja)
+import { renderReportesView } from '../views/reportesView.js';
+import { renderConfiguracionView } from '../views/configuracionView.js';
+import { renderUsuariosView } from '../views/usuariosView.js';
 
 export const MainController = {
   async init() {
@@ -9,7 +20,7 @@ export const MainController = {
     setInterval(() => this.updateClock(), 1000);
     this.bindGlobalEvents();
     
-    // Carga inicial (Dashboard)
+    // Carga inicial
     await this.loadDashboard();
   },
 
@@ -22,7 +33,6 @@ export const MainController = {
   },
 
   bindGlobalEvents() {
-    // Delegación de eventos para la navegación
     document.body.addEventListener('click', (e) => {
       const navItem = e.target.closest('[data-target]');
       if (navItem) {
@@ -43,16 +53,39 @@ export const MainController = {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) return;
 
-    // Actualizar nav activo
+    // Marcado activo en el Sidebar
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.querySelector(`[data-target="${viewName}"]`)?.classList.add('active');
 
+    // Mapeo exacto de rutas
     switch (viewName) {
       case 'dashboard':
         await this.loadDashboard();
         break;
       case 'surtidores':
         await SurtidorController.init(mainContent);
+        break;
+      case 'tanques':
+        await TanqueController.init(mainContent);
+        break;
+      case 'registro-ventas':
+        await VentaController.initRegistro(mainContent);
+        break;
+      case 'historial':
+      case 'historial-ventas':
+        await VentaController.initHistorial(mainContent);
+        break;
+      case 'alertas':
+        await AlertaController.init(mainContent);
+        break;
+      case 'reportes':
+        mainContent.innerHTML = renderReportesView();
+        break;
+      case 'configuracion':
+        mainContent.innerHTML = renderConfiguracionView();
+        break;
+      case 'usuarios':
+        mainContent.innerHTML = renderUsuariosView();
         break;
       default:
         mainContent.innerHTML = `<div class="p-6 text-white">Vista <b>${viewName}</b> en construcción.</div>`;
@@ -66,6 +99,29 @@ export const MainController = {
     
     mainContent.innerHTML = renderDashboardView(sales, surtidores);
     this.initCharts();
+  },
+  bindGlobalEvents() {
+    // Delegación de clics para rutas
+    document.body.addEventListener('click', (e) => {
+      const navItem = e.target.closest('[data-target]');
+      if (navItem) {
+        const targetView = navItem.getAttribute('data-target');
+        this.navigateTo(targetView);
+      }
+
+      // Evento para activar el micrófono
+      const voiceBtn = e.target.closest('#btn-voice-command');
+      if (voiceBtn) {
+        VoiceController.toggleListening();
+      }
+    });
+
+    const toggleBtn = document.getElementById('toggle-sidebar-btn');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        document.getElementById('sidebar')?.classList.toggle('open');
+      });
+    }
   },
 
   initCharts() {
