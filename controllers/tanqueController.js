@@ -2,7 +2,7 @@
 import { renderTanquesView, renderTanqueCard } from '../views/tanquesView.js';
 import { TanqueModel } from '../models/tanqueModel.js';
 import { supabase } from '../config/supabase.js';
-
+import { ScadaAlert } from '/config/scadaAlert.js';
 export const TanqueController = {
   container: null,
   tanquesCache: [],

@@ -1,5 +1,6 @@
 import { ConfiguracionModel } from '../models/configuracionModel.js';
 import { renderConfiguracionView } from '../views/configuracionView.js';
+import { ScadaAlert } from '/config/scadaAlert.js';
 
 export const ConfiguracionController = {
   datosActuales: null,
@@ -120,13 +121,18 @@ export const ConfiguracionController = {
     }
   },
 
-  mostrarToast(mensaje, tipo = 'success') {
-    if (typeof window.showToast === 'function') {
-      window.showToast(mensaje, tipo);
-    } else {
-      alert(mensaje);
-    }
-  },
+mostrarToast(mensaje, tipo = 'success') {
+  // Si tienes definido el helper ScadaAlert, lo usas directamente
+  if (typeof ScadaAlert !== 'undefined' && typeof ScadaAlert.toast === 'function') {
+    ScadaAlert.toast(mensaje, tipo);
+  } else if (typeof window.showToast === 'function') {
+    // Si tenías otra función global personalizada
+    window.showToast(mensaje, tipo);
+  } else {
+    // Como último recurso, si nada está cargado, un log en consola sin interrumpir con un alert() nativo
+    console.log(`[Toast ${tipo.toUpperCase()}]: ${mensaje}`);
+  }
+},
 
   destroy() {
     this.datosActuales = null;

@@ -2,6 +2,7 @@
 import { VentaModel } from '../models/ventaModel.js';
 import { renderRegistroVentasView } from '../views/registroVentasView.js';
 import { renderHistorialVentasView } from '../views/historialVentasView.js';
+import { ScadaAlert } from '/config/scadaAlert.js';
 
 export const VentaController = {
   surtidoresData: [],
@@ -118,11 +119,18 @@ export const VentaController = {
       const totalCobrado = cantidad * precioUnitario;
       const metodoPago = document.getElementById('venta-metodo-pago').value;
 
-      if (!surtidorId || !combustibleId || !cantidad || cantidad <= 0) {
-        alert('Por favor complete correctamente todos los datos requeridos.');
-        if (btnSubmit) btnSubmit.disabled = false;
-        return;
-      }
+     if (!surtidorId || !combustibleId || !cantidad || cantidad <= 0) {
+  // Alerta modal de advertencia con estética SCADA
+  ScadaAlert.error(
+    'Por favor, verifique el formulario y complete correctamente todos los campos requeridos (Surtidor, Combustible y Cantidad mayor a 0).',
+    'DATOS DE ENTRADA INCOMPLETOS'
+  );
+
+  // Habilitar de nuevo el botón de envío
+  if (btnSubmit) btnSubmit.disabled = false;
+  
+  return;
+}
 
       const payloadVenta = {
         surtidor_id: surtidorId,
@@ -140,11 +148,18 @@ export const VentaController = {
       await VentaModel.registrarVenta(payloadVenta);
       await this.initRegistro(this.container);
 
-    } catch (error) {
-      console.error('Error guardando la venta:', error);
-      alert('Ocurrió un error al registrar la venta en la base de datos.');
-      if (btnSubmit) btnSubmit.disabled = false;
-    }
+  } catch (error) {
+  console.error('Error guardando la venta:', error);
+
+  // Alerta modal crítica estilo SCADA
+  ScadaAlert.error(
+    `No se pudo completar el registro de la venta: <strong>${error?.message || 'Error de comunicación con la base de datos.'}</strong>`,
+    'ERROR EN TRANSACCIÓN DE VENTA'
+  );
+
+  // Habilitar de nuevo el botón de envío
+  if (btnSubmit) btnSubmit.disabled = false;
+}
   },
 
   // --- VISTA HISTORIAL DE VENTAS ---
@@ -248,11 +263,14 @@ export const VentaController = {
     btnExcel?.addEventListener('click', () => this.exportarExcel());
   },
 
-  exportarExcel() {
-    if (!this.ventasActuales || this.ventasActuales.length === 0) {
-      alert('No hay datos para exportar.');
-      return;
-    }
+ exportarExcel() {
+  if (!this.ventasActuales || this.ventasActuales.length === 0) {
+    ScadaAlert.toast(
+      'No hay registros de ventas para exportar a Excel.',
+      'warning'
+    );
+    return;
+  }
 
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
     csvContent += "ID,Placa,Cliente,Surtidor,Combustible,Cantidad,Total (Bs),Metodo Pago,Fecha\n";
@@ -282,11 +300,14 @@ export const VentaController = {
     document.body.removeChild(link);
   },
 
-  exportarPDF() {
-    if (!this.ventasActuales || this.ventasActuales.length === 0) {
-      alert('No hay datos para exportar.');
-      return;
-    }
+exportarPDF() {
+  if (!this.ventasActuales || this.ventasActuales.length === 0) {
+    ScadaAlert.toast(
+      'No hay registros de ventas para generar el reporte PDF.',
+      'warning'
+    );
+    return;
+  }
 
     const printWindow = window.open('', '_blank');
     const filasHTML = this.ventasActuales.map(v => `

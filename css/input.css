@@ -230,3 +230,86 @@ html, body {
   background-color: #020617;
   min-height: 100vh;
 }
+/* ===================== ALERTS & NOTIFICATIONS (SCADA) ===================== */
+
+/* Animaciones de entrada y pulso */
+@keyframes scadaAlertIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes criticalGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 15px rgba(239, 68, 68, 0.4); }
+}
+
+/* Tarjeta base de Alerta */
+.scada-alert-box {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.95)) !important;
+  border: 1px solid var(--border);
+  border-radius: 12px !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: blur(12px);
+  animation: scadaAlertIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 20px !important;
+}
+
+/* Variación Crítica / Error */
+.scada-alert-box.alert-error {
+  border-color: rgba(239, 68, 68, 0.8) !important;
+  animation: scadaAlertIn 0.25s ease, criticalGlow 2s infinite !important;
+}
+
+/* Variación Éxito */
+.scada-alert-box.alert-success {
+  border-color: rgba(16, 185, 129, 0.8) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Variación Advertencia */
+.scada-alert-box.alert-warning {
+  border-color: rgba(245, 158, 11, 0.8) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important;
+}
+
+/* Encabezado y Texto de Alerta */
+.scada-alert-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #FFF !important;
+}
+
+.scada-alert-content {
+  font-family: 'Courier New', monospace;
+  color: var(--text-secondary) !important;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+/* Botones dentro de la alerta */
+.scada-alert-btn {
+  background: var(--btn-primary) !important;
+  color: #FFF !important;
+  border-radius: 6px !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 8px 18px !important;
+  border: none !important;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+  transition: all 0.2s ease;
+}
+
+.scada-alert-btn:hover {
+  background: var(--btn-hover) !important;
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
+}

@@ -1,5 +1,6 @@
 import { surtidorModel } from '../models/surtidorModel.js';
 import { surtidoresView } from '../views/surtidoresView.js';
+import { ScadaAlert } from '/config/scadaAlert.js';
 
 export const SurtidorController = {
   container: null,
@@ -27,15 +28,31 @@ export const SurtidorController = {
     }
   },
 
-  async alternarEstadoRapido(id, estadoActual) {
-    try {
-      const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
-      await surtidorModel.actualizarEstado(id, nuevoEstado);
-      await this.cargarSurtidores();
-    } catch (error) {
-      alert('Error al alternar estado: ' + error.message);
-    }
-  },
+async alternarEstadoRapido(id, estadoActual) {
+  try {
+    // 1. Determinar el nuevo estado
+    const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+    
+    // 2. Actualizar en base de datos / API
+    await surtidorModel.actualizarEstado(id, nuevoEstado);
+    
+    // 3. Recargar la lista/UI
+    await this.cargarSurtidores();
+    
+    // 4. Feedback visual de éxito (Toast discreto en esquina superior derecha)
+    ScadaAlert.toast(
+      `Surtidor ID #${id} cambiado a [${nuevoEstado.toUpperCase()}]`,
+      'success'
+    );
+
+  } catch (error) {
+    // 5. Alerta modal de error crítica (Sombra resplandeciente roja + LED rojo)
+    ScadaAlert.error(
+      `No se pudo cambiar el estado del surtidor #${id}: ${error.message}`,
+      'FALLO DE CONEXIÓN SCADA'
+    );
+  }
+},
 
   bindEvents() {
     const modal = document.getElementById('modal-editar-surtidor');
@@ -73,23 +90,58 @@ export const SurtidorController = {
     btnCancelar?.addEventListener('click', cerrarModal);
     btnCancelarX?.addEventListener('click', cerrarModal);
 
-    // Guardar cambios en base de datos
-    if (form) {
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('edit-surtidor-id')?.value;
-        const nombre = document.getElementById('edit-surtidor-nombre')?.value;
-        const tanque_id = document.getElementById('edit-surtidor-tanque')?.value;
-        const estado = document.getElementById('edit-surtidor-estado')?.value;
+   // Guardar cambios en base de datos
+if (form) {
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    
+    // Captura de valores del formulario
+    const id = document.getElementById('edit-surtidor-id')?.value;
+    const nombre = document.getElementById('edit-surtidor-nombre')?.value;
+    const tanque_id = document.getElementById('edit-surtidor-tanque')?.value;
+    const estado = document.getElementById('edit-surtidor-estado')?.value;
 
-        try {
-          await surtidorModel.actualizarSurtidor(id, { nombre, tanque_id, estado });
-          cerrarModal();
-          await this.cargarSurtidores(); // Recargar datos de la vista
-        } catch (err) {
-          alert('Error al guardar cambios: ' + err.message);
-        }
-      };
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+    try {
+      // 1. Efecto visual de procesamiento en el botón
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="led led-blue"></span> GUARDANDO...`;
+      }
+
+      // 2. Petición para actualizar en base de datos
+      await surtidorModel.actualizarSurtidor(id, { nombre, tanque_id, estado });
+
+      // 3. Cerrar el modal de edición
+      cerrarModal();
+
+      // 4. Recargar datos de la vista
+      await this.cargarSurtidores();
+
+      // 5. Notificación flotante de éxito
+      ScadaAlert.toast(
+        `Surtidor "${nombre}" actualizado correctamente`,
+        'success'
+      );
+
+    } catch (err) {
+      // 6. Alerta modal de error con estilo SCADA crítico
+      ScadaAlert.error(
+        `No se pudieron guardar los cambios: ${err.message}`,
+        'ERROR DE ACTUALIZACIÓN'
+      );
+
+    } finally {
+      // Restablecer el estado original del botón
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
+    }
+  };
+
     }
   }
 };

@@ -21,6 +21,7 @@ import { voiceCtrl } from './voiceController.js';
 import { ReporteController } from './reporteController.js';
 import { ConfiguracionController } from './configuracionController.js';
 import { UsuarioController } from './usuarioController.js';
+import { ScadaAlert } from '/config/scadaAlert.js';
 
 // Vistas
 import { renderDashboardView } from '../views/dashboardView.js';

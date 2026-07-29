@@ -1,6 +1,7 @@
 // controllers/reporteController.js
 import { ReporteModel } from '../models/reporteModel.js';
 import { renderReportesView } from '../views/reportesView.js';
+import { ScadaAlert } from '/config/scadaAlert.js';
 
 export const ReporteController = {
   async init(container) {

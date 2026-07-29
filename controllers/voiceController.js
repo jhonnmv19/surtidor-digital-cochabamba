@@ -50,11 +50,16 @@ export class VoiceController {
   }
 
   static toggleListening() {
-    const rec = this._getRecognition();
-    if (!rec) {
-      alert('Tu navegador no soporta control por voz.');
-      return;
-    }
+  const rec = this._getRecognition();
+  
+  if (!rec) {
+    // Alerta modal de incompatibilidad con interfaz SCADA
+    ScadaAlert.warning(
+      'Tu navegador actual no soporta el reconocimiento y control por voz (Web Speech API). Por favor, utiliza Chrome, Edge o un navegador compatible.',
+      'SISTEMA DE VOZ NO COMPATIBLE'
+    );
+    return;
+  }
 
     if (this.isListening) {
       rec.stop();
@@ -71,11 +76,16 @@ export class VoiceController {
   }
 
   static escucharDespacho(onResultCallback) {
-    const rec = this._getRecognition();
-    if (!rec) {
-      alert('Tu navegador no soporta entrada por voz.');
-      return;
-    }
+  const rec = this._getRecognition();
+  
+  if (!rec) {
+    // Alerta modal de advertencia estilo SCADA
+    ScadaAlert.warning(
+      'Tu navegador actual no soporta el módulo de entrada por voz. Te recomendamos utilizar Google Chrome o Microsoft Edge.',
+      'MÓDULO DE DESPACHO INCOMPATIBLE'
+    );
+    return;
+  }
 
     this.onDespachoCallback = onResultCallback;
     try {
