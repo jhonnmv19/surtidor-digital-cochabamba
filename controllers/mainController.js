@@ -29,6 +29,7 @@ export const MainController = {
   activeController: null,
   alertCheckInterval: null,
   previousAlertCount: 0,
+  audioInterval: null, // Guardará el bucle del sonido de la sirena
 
   async init() {
     this.updateClock();
@@ -80,11 +81,12 @@ export const MainController = {
     const navbar = document.getElementById('app-navbar');
     const mainContent = document.getElementById('main-content');
 
-    // Detener intervalo de verificaciones en segundo plano
+    // Detener intervalo de verificaciones y sirena en segundo plano
     if (this.alertCheckInterval) {
       clearInterval(this.alertCheckInterval);
       this.alertCheckInterval = null;
     }
+    this.stopAlarmLoop();
 
     // Ocultar y limpiar componentes del layout
     if (sidebar) {
@@ -150,13 +152,15 @@ export const MainController = {
   },
 
   /**
-   * Consulta las alertas activas en Supabase, actualiza el Navbar y emite un tono de advertencia
+   * Consulta las alertas activas en Supabase, actualiza el Navbar
+   * y lanza el modal bloqueante con alarma si existen alertas de nivel crítico.
    */
   async checkSystemAlerts() {
     try {
       const activas = await AlertaModel.obtenerActivas();
       const count = activas ? activas.length : 0;
 
+      // Actualizar badge del Navbar
       const badge = document.getElementById('nav-alert-badge');
       if (badge) {
         badge.textContent = count;
@@ -167,13 +171,129 @@ export const MainController = {
         }
       }
 
-      if (count > this.previousAlertCount && this.previousAlertCount !== 0) {
-        this.playAlertSound();
-      }
-      this.previousAlertCount = count;
+      // Filtrar únicamente alertas de nivel 'critico'
+      const alertasCriticas = (activas || []).filter(a => a.nivel === 'critico');
 
+      if (alertasCriticas.length > 0) {
+        // Mostrar Modal de Alarma de Pantalla Completa
+        this.mostrarModalAlertasCriticas(alertasCriticas);
+        this.startAlarmLoop();
+      } else {
+        // Si no hay alertas críticas, remover el modal si estaba abierto y detener alarma
+        this.cerrarModalAlertas();
+      }
+
+      this.previousAlertCount = count;
     } catch (e) {
       console.error('Error al verificar alertas SCADA:', e);
+    }
+  },
+
+  /**
+   * Genera e inserta el Modal de pantalla completa en el DOM
+   */
+  mostrarModalAlertasCriticas(alertas) {
+    let modal = document.getElementById('scada-critical-alert-modal');
+
+    // Construcción del HTML de las alertas dentro del modal
+    const alertasItemsHTML = alertas.map(a => `
+      <div class="bg-rose-950/80 border border-rose-500/60 p-3 rounded-lg flex items-start gap-3 shadow-lg">
+        <div class="w-3 h-3 rounded-full bg-rose-500 animate-ping mt-1 flex-shrink-0"></div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-rose-200">${a.descripcion || 'Falla Crítica en Sistema SCADA'}</p>
+          <p class="text-xs text-rose-300/80 mt-1">Ubicación/Origen: ${a.origen || 'Surtidor / Tanque General'}</p>
+          <p class="text-[10px] text-slate-400 mt-1">${new Date(a.created_at || Date.now()).toLocaleTimeString('es-BO')}</p>
+        </div>
+      </div>
+    `).join('');
+
+    const modalHTML = `
+      <div id="scada-critical-alert-modal" class="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="max-w-lg w-full bg-slate-900 border-2 border-rose-600 rounded-2xl shadow-2xl p-6 text-white space-y-5 animate-bounce-short">
+          
+          <!-- Encabezado Alarma -->
+          <div class="flex items-center gap-3 border-b border-rose-800/50 pb-4">
+            <div class="p-3 bg-rose-600/20 text-rose-500 rounded-full animate-pulse border border-rose-500/40">
+              <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-black tracking-wide text-rose-500">¡ALERTA CRÍTICA SCADA!</h2>
+              <p class="text-xs text-slate-300">Se han detectado eventos que requieren atención inmediata.</p>
+            </div>
+          </div>
+
+          <!-- Lista de Alertas -->
+          <div class="max-h-60 overflow-y-auto space-y-2 pr-1">
+            ${alertasItemsHTML}
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex gap-3 pt-2">
+            <button id="btn-modal-go-alerts" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-lg shadow-rose-900/50 flex items-center justify-center gap-2 text-sm">
+              <i class="fa-solid fa-arrow-right font-bold"></i> Ir a Vista de Alertas
+            </button>
+            <button id="btn-modal-silence" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl border border-slate-700 text-sm transition">
+              Silenciar
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    if (!modal) {
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      this.bindModalEvents();
+    } else {
+      modal.outerHTML = modalHTML;
+      this.bindModalEvents();
+    }
+  },
+
+  /**
+   * Vincula los eventos del modal para navegar a la sección de Alertas o silenciar
+   */
+  bindModalEvents() {
+    const btnGo = document.getElementById('btn-modal-go-alerts');
+    const btnSilence = document.getElementById('btn-modal-silence');
+
+    if (btnGo) {
+      btnGo.onclick = () => {
+        this.cerrarModalAlertas();
+        this.navigateTo('alertas');
+      };
+    }
+
+    if (btnSilence) {
+      btnSilence.onclick = () => {
+        this.stopAlarmLoop();
+        const modal = document.getElementById('scada-critical-alert-modal');
+        if (modal) modal.style.display = 'none';
+      };
+    }
+  },
+
+  cerrarModalAlertas() {
+    this.stopAlarmLoop();
+    const modal = document.getElementById('scada-critical-alert-modal');
+    if (modal) modal.remove();
+  },
+
+  /**
+   * Reproductor de Sonido continuo (Sirena) con Web Audio API
+   */
+  startAlarmLoop() {
+    if (this.audioInterval) return; // Evitar múltiples bucles simultáneos
+    this.playAlertSound();
+    this.audioInterval = setInterval(() => {
+      this.playAlertSound();
+    }, 1200);
+  },
+
+  stopAlarmLoop() {
+    if (this.audioInterval) {
+      clearInterval(this.audioInterval);
+      this.audioInterval = null;
     }
   },
 
@@ -244,6 +364,11 @@ export const MainController = {
   },
 
   async navigateTo(viewName) {
+    // Si navegamos manualmente o desde el modal a la vista de alertas, detenemos la alarma auditiva
+    if (viewName === 'alertas') {
+      this.stopAlarmLoop();
+    }
+
     const mainContent = document.getElementById('main-content');
     if (!mainContent) return;
 
@@ -306,15 +431,16 @@ export const MainController = {
 
   async loadDashboard(container) {
     try {
-      const [turnoActivo, surtidores, alertasActivas, kpisHoy, ultimasVentas, ventasPorHora, totalVisitas] = await Promise.all([
-        VentaModel.obtenerTurnoActivo(),
-        surtidorModel.obtenerTodos(),
-        AlertaModel.obtenerActivas(),
-        VentaModel.obtenerKpisHoy(),
-        VentaModel.obtenerHistorialVentas(10),
-        VentaModel.obtenerVentasPorHoraHoy(),
-        VisitaModel.obtenerTotalVisitas()
-      ]);
+      // En MainController.loadDashboard:
+const [turnoActivo, surtidores, alertasActivas, kpisHoy, ultimasVentas, ventasPorHora, totalVisitas] = await Promise.all([
+  VentaModel.obtenerTurnoActivo(),
+  surtidorModel.obtenerTodos(),
+  AlertaModel.obtenerActivas(),
+  VentaModel.obtenerKpisHoy(),
+  VentaModel.obtenerHistorialVentas(10), // <-- Manténlo en 10 o 15 máximo
+  VentaModel.obtenerVentasPorHoraHoy(),
+  VisitaModel.obtenerTotalVisitas()
+]);
 
       const salesFormatted = (ultimasVentas || []).map(v => ({
         id: `#V-${v.id}`,

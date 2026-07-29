@@ -1,21 +1,19 @@
-// views/loginView.js
-
 export function renderLogin() {
   return `
   <div class="fixed inset-0 z-[9999] w-screen h-screen flex bg-slate-950 overflow-hidden font-sans">
     
-    <!-- COLUMNA IZQUIERDA: Branding SCADA + SurtirSoft (Visible en pantallas medianas y grandes) -->
+    <!-- COLUMNA IZQUIERDA: Branding SCADA + SurtirSoft (Pantallas L/XL) -->
     <div class="hidden lg:flex lg:w-1/2 relative bg-slate-900 flex-col justify-between p-12 border-r border-slate-800 overflow-hidden">
       <!-- Efecto de Luz de Fondo SCADA -->
       <div class="absolute -top-24 -left-24 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
       
-      <!-- Grid de Líneas Tecnológicas (Fondo) -->
+      <!-- Grid Tecnológico -->
       <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"></div>
 
       <!-- Header Marca -->
       <div class="relative z-10 flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-slate-800 border border-sky-500/30 flex items-center justify-center p-1 shadow-lg shadow-sky-500/10">
+        <div class="w-12 h-12 rounded-xl bg-slate-800 border border-sky-500/30 flex items-center justify-center p-1.5 shadow-lg shadow-sky-500/10">
           <img src="/imagen/yautja2.png" alt="Logo SurtirSoft" class="w-full h-full object-contain" />
         </div>
         <div>
@@ -40,7 +38,7 @@ export function renderLogin() {
           Plataforma de telemetría y monitoreo automatizado en tiempo real para surtidores, tanques de combustible, registro operacional de ventas y control de seguridad.
         </p>
 
-        <!-- Indicadores rápidos SCADA -->
+        <!-- Indicadores SCADA -->
         <div class="grid grid-cols-3 gap-3 pt-4 border-t border-slate-800/80">
           <div class="bg-slate-950/50 p-3 rounded-lg border border-slate-800">
             <span class="block text-xs text-slate-500">Tanques</span>
@@ -68,9 +66,9 @@ export function renderLogin() {
     <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-slate-950 relative">
       <div class="w-full max-w-md space-y-8">
         
-        <!-- Header Móvil (Solo se muestra en pantallas pequeñas) -->
+        <!-- Header Móvil -->
         <div class="lg:hidden text-center space-y-2 mb-6">
-          <div class="inline-flex w-16 h-16 rounded-2xl bg-slate-900 border border-sky-500/30 items-center justify-center p-2 mb-2">
+          <div class="inline-flex w-16 h-16 rounded-2xl bg-slate-900 border border-sky-500/30 items-center justify-center p-2 mb-2 shadow-lg shadow-sky-500/10">
             <img src="/imagen/yautja2.png" alt="Logo SurtirSoft" class="w-full h-full object-contain" />
           </div>
           <h2 class="text-2xl font-bold text-white">SURTIRSOFT <span class="text-sky-400">SCADA</span></h2>
@@ -111,14 +109,14 @@ export function renderLogin() {
           </button>
         </form>
 
-        <!-- Divisor para Modo Evaluación -->
+        <!-- Divisor Modo Evaluación -->
         <div class="relative flex py-2 items-center">
           <div class="flex-grow border-t border-slate-800/80"></div>
           <span class="flex-shrink mx-4 text-[10px] uppercase tracking-widest text-slate-500 font-bold">Evaluación Docente</span>
           <div class="flex-grow border-t border-slate-800/80"></div>
         </div>
 
-        <!-- Botón Acceso Rápido 1-Click -->
+        <!-- Acceso Rápido -->
         <button id="btn-quick-login" type="button" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-sky-400 border border-sky-500/30 hover:border-sky-500/60 font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
           <i class="fa-solid fa-bolt text-amber-400 animate-pulse"></i>
           <span>Ingreso Rápido Demo (1-Click)</span>

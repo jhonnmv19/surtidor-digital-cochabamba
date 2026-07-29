@@ -1,4 +1,3 @@
-// views/dashboardView.js
 export function renderDashboardView(sales = [], surtidores = [], kpis = { ingresos: '0.00 Bs', ventas: 0, litros: '0 L', alertas: 0, visitas: 1 }, alertas = []) {
   const safeSales = Array.isArray(sales) ? sales : [];
   const safeSurtidores = Array.isArray(surtidores) ? surtidores : [];
@@ -18,7 +17,7 @@ export function renderDashboardView(sales = [], surtidores = [], kpis = { ingres
   `).join('') : `<tr><td colspan="8" class="text-center py-6 text-xs text-slate-500">Sin ventas registradas el día de hoy</td></tr>`;
 
   const surtidoresCards = safeSurtidores.length > 0 ? safeSurtidores.map(st => `
-    <div class="glass-card p-3 flex items-center justify-between bg-slate-800/50 rounded-lg border border-slate-700/50 mb-2">
+    <div class="glass-card p-3 flex items-center justify-between bg-slate-800/50 rounded-lg border border-slate-700/50 mb-2 hover:border-slate-600/60 transition">
       <div>
         <div class="text-xs font-bold text-white">${st.nombre}</div>
         <div class="text-xs text-slate-400">${st.tipo}</div>
@@ -33,7 +32,7 @@ export function renderDashboardView(sales = [], surtidores = [], kpis = { ingres
   const alertasHTML = safeAlertas.length > 0 ? safeAlertas.map(a => `
     <div class="alert-item ${a.nivel === 'critico' ? 'bg-rose-950/40 border-rose-800/50' : 'bg-amber-950/40 border-amber-800/50'} mb-2 p-2.5 rounded border">
       <div class="flex items-start gap-2">
-        <div class="w-2 h-2 rounded-full ${a.nivel === 'critico' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'} mt-1.5"></div>
+        <div class="w-2 h-2 rounded-full ${a.nivel === 'critico' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'} mt-1.5 flex-shrink-0"></div>
         <div>
           <div class="text-xs font-semibold text-white">${a.descripcion}</div>
           <div class="text-[10px] text-slate-400 mt-0.5">${new Date(a.created_at).toLocaleTimeString('es-BO')}</div>
@@ -105,32 +104,37 @@ export function renderDashboardView(sales = [], surtidores = [], kpis = { ingres
 
     <!-- SECCIÓN DE GRÁFICOS -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-  <div class="lg:col-span-2 bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 overflow-hidden relative">
-    <h3 class="text-sm font-semibold text-white mb-2">Ventas por Hora (Hoy)</h3>
-    <div id="chart-ingresos" class="w-full h-48 overflow-hidden"></div>
-  </div>
-  <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 overflow-hidden relative">
-    <h3 class="text-sm font-semibold text-white mb-2">Distribución Surtidores</h3>
-    <div id="chart-combustible" class="w-full h-48 overflow-hidden"></div>
-  </div>
-</div>
+      <div class="lg:col-span-2 bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 overflow-hidden relative">
+        <h3 class="text-sm font-semibold text-white mb-2">Ventas por Hora (Hoy)</h3>
+        <div id="chart-ingresos" class="w-full h-48 overflow-hidden"></div>
+      </div>
+      <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 overflow-hidden relative">
+        <h3 class="text-sm font-semibold text-white mb-2">Distribución Surtidores</h3>
+        <div id="chart-combustible" class="w-full h-48 overflow-hidden"></div>
+      </div>
+    </div>
 
-    <!-- TABLAS Y ESTADO -->
+    <!-- TABLAS Y ESTADO CON SCROLLS INDEPENDIENTES -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="lg:col-span-2 bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
-        <h3 class="text-sm font-semibold text-white mb-3">Últimas Ventas Registradas</h3>
-        <div class="overflow-x-auto">
+      
+      <!-- COLUMNA IZQUIERDA: Últimas Ventas (Scroll propio) -->
+      <div class="lg:col-span-2 bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-white">Últimas Ventas Registradas</h3>
+          <span class="text-[11px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">Límite visual: 10 filas</span>
+        </div>
+        <div class="max-h-80 overflow-y-auto overflow-x-auto custom-scrollbar rounded-lg border border-slate-700/30">
           <table class="w-full text-left border-collapse">
-            <thead>
+            <thead class="sticky top-0 bg-slate-900/90 backdrop-blur-sm z-10">
               <tr class="border-b border-slate-700 text-xs text-slate-400">
-                <th class="py-2 px-3">ID</th>
-                <th class="py-2 px-3">Placa</th>
-                <th class="py-2 px-3">Cliente</th>
-                <th class="py-2 px-3">Combustible</th>
-                <th class="py-2 px-3">Cantidad</th>
-                <th class="py-2 px-3">Total</th>
-                <th class="py-2 px-3">Pago</th>
-                <th class="py-2 px-3">Hora</th>
+                <th class="py-2.5 px-3">ID</th>
+                <th class="py-2.5 px-3">Placa</th>
+                <th class="py-2.5 px-3">Cliente</th>
+                <th class="py-2.5 px-3">Combustible</th>
+                <th class="py-2.5 px-3">Cantidad</th>
+                <th class="py-2.5 px-3">Total</th>
+                <th class="py-2.5 px-3">Pago</th>
+                <th class="py-2.5 px-3">Hora</th>
               </tr>
             </thead>
             <tbody>
@@ -140,16 +144,27 @@ export function renderDashboardView(sales = [], surtidores = [], kpis = { ingres
         </div>
       </div>
 
-      <div class="space-y-4">
+      <!-- COLUMNA DERECHA: Surtidores y Alertas (Scrolls propios) -->
+      <div class="space-y-4 flex flex-col">
+        
+        <!-- Estado de Surtidores -->
         <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
           <h3 class="text-sm font-semibold text-white mb-3">Estado de Surtidores</h3>
-          ${surtidoresCards}
+          <div class="max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+            ${surtidoresCards}
+          </div>
         </div>
+
+        <!-- Alertas SCADA -->
         <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
           <h3 class="text-sm font-semibold text-white mb-3">Alertas SCADA</h3>
-          ${alertasHTML}
+          <div class="max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+            ${alertasHTML}
+          </div>
         </div>
+
       </div>
+
     </div>
   </div>
   `;
