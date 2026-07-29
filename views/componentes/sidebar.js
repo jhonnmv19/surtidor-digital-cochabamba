@@ -36,10 +36,10 @@ export function renderSidebar() {
         <i class="fa-solid fa-clock-rotate-left"></i><span>Historial de Ventas</span>
       </div>
       <div class="nav-item" data-target="alertas">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>Alertas</span>
-        <span class="ml-auto badge badge-red text-xs" id="alert-badge">3</span>
-      </div>
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Alertas</span>
+      <span class="ml-auto badge badge-red text-xs hidden" id="alert-badge">0</span>
+    </div>
       <div class="nav-item" data-target="reportes">
         <i class="fa-solid fa-file-chart-column"></i><span>Reportes</span>
       </div>

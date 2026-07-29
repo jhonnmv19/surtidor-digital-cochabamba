@@ -16,6 +16,7 @@
   
   <!-- Plotly.js -->
   <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -42,21 +43,20 @@
     }
   </script>
 
-  <!-- Script principal de inicio (ES6 Modules) -->
-  <script type="module">
-    import { renderSidebar } from '/views/componentes/sidebar.js';
-    import { renderNavbar } from '/views/componentes/navbar.js';
-    import { MainController } from '/controllers/mainController.js';
+<!-- Script principal de inicio (ES6 Modules) -->
+<script type="module">
+  import { renderSidebar } from '/views/componentes/sidebar.js';
+  import { renderNavbar } from '/views/componentes/navbar.js';
+  import { MainController } from '/controllers/mainController.js';
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Montar layout
-      document.getElementById('app-sidebar').innerHTML = renderSidebar();
-      document.getElementById('app-navbar').innerHTML = renderNavbar();
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('app-sidebar').innerHTML = renderSidebar();
+    document.getElementById('app-navbar').innerHTML = renderNavbar();
 
-      // Inicializar Controlador Principal
-      MainController.init();
-    });
-  </script>
+    // Cambiar initDashboard() por init()
+    await MainController.init();
+  });
+</script>
   <script>
   let deferredPrompt;
 

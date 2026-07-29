@@ -45,10 +45,10 @@ export function renderNavbar() {
         </div>
 
         <!-- BOTÓN DE ALERTAS / NOTIFICACIONES -->
-        <button id="nav-alert-btn" class="relative p-2 text-slate-300 hover:text-white transition-colors">
-          <i class="fa-solid fa-bell text-base"></i>
-          <span class="absolute top-0 right-0 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold">3</span>
-        </button>
+<button id="nav-alert-btn" data-target="alertas" class="nav-item relative p-2 text-slate-300 hover:text-white transition-colors cursor-pointer">
+  <i class="fa-solid fa-bell text-base"></i>
+  <span id="nav-alert-badge" class="absolute top-0 right-0 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold">0</span>
+</button>
 
         <!-- PERFIL DE USUARIO -->
         <div class="flex items-center gap-2 cursor-pointer border-l border-slate-800 pl-3">

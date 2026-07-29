@@ -141,3 +141,76 @@ body { background: var(--bg-main); color: var(--text-primary); font-family: 'Int
   #main-content { margin-left: 0; }
   #header { left: 0; }
 }
+
+/* ── ESTILOS DE FORMULARIO SCADA (INDEPENDIENTE DEL NAVEGADOR) ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.scada-input {
+  width: 100%;
+  background: #0F172A !important;
+  color: #F8FAFC !important;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  font-family: 'Courier New', monospace;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.scada-input:focus {
+  border-color: var(--btn-primary);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.25);
+  background: #131E32 !important;
+}
+
+.currency-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* ── SCADA TABS ── */
+.config-tab {
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.config-tab:hover {
+  background: rgba(14, 165, 233, 0.1);
+  color: #FFF;
+  border-color: var(--btn-primary);
+}
+
+.config-tab.active {
+  background: var(--btn-primary);
+  color: #FFF;
+  border-color: var(--btn-primary);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
+}
