@@ -36,10 +36,10 @@ export function renderSidebar() {
         <i class="fa-solid fa-clock-rotate-left"></i><span>Historial de Ventas</span>
       </div>
       <div class="nav-item" data-target="alertas">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>Alertas</span>
-      <span class="ml-auto badge badge-red text-xs hidden" id="alert-badge">0</span>
-    </div>
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Alertas</span>
+        <span class="ml-auto badge badge-red text-xs hidden" id="alert-badge">0</span>
+      </div>
       <div class="nav-item" data-target="reportes">
         <i class="fa-solid fa-file-chart-column"></i><span>Reportes</span>
       </div>
@@ -53,7 +53,21 @@ export function renderSidebar() {
       </div>
     </div>
 
+    <!-- SECCIÓN INFERIOR: CONTADOR DE ACCESOS Y CERRAR SESIÓN -->
     <div style="border-top:1px solid var(--border)">
+      
+      <!-- Contador de accesos auditados -->
+      <div class="px-4 py-3 text-xs flex items-center justify-between" style="background: rgba(15, 23, 42, 0.4); border-bottom: 1px solid var(--border, #1E293B);">
+        <div class="flex items-center gap-2 text-slate-400">
+          <i class="fa-solid fa-user-check text-sky-400"></i>
+          <span>Accesos Auditados:</span>
+        </div>
+        <span id="sidebar-visitas-count" class="font-bold text-sky-400 bg-sky-950/60 border border-sky-800/50 px-2 py-0.5 rounded-md">
+          ...
+        </span>
+      </div>
+
+      <!-- Botón Cerrar Sesión -->
       <div class="nav-item" style="color:#EF4444;" id="btn-logout">
         <i class="fa-solid fa-right-from-bracket"></i><span>Cerrar Sesión</span>
       </div>

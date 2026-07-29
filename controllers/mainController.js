@@ -1,10 +1,18 @@
 // controllers/mainController.js
+
+// Importaciones de Autenticación y Vistas Generales
+import { renderLogin } from '../views/loginView.js';
+import { AuthController } from './authController.js';
+import { renderSidebar } from '../views/componentes/sidebar.js';
+import { renderNavbar } from '../views/componentes/navbar.js';
+
+// Modelos Supabase
 import { VentaModel } from '../models/ventaModel.js';
 import { surtidorModel } from '../models/surtidorModel.js';
 import { AlertaModel } from '../models/alertaModel.js';
-import { VisitaModel } from '../models/visitaModel.js'; // 1. Importación del modelo de visitas
+import { VisitaModel } from '../models/visitaModel.js';
 
-// Controladores
+// Controladores Módulos SCADA
 import { SurtidorController } from './surtidorController.js';
 import { TanqueController } from './tanqueController.js';
 import { VentaController } from './ventaController.js';
@@ -16,9 +24,6 @@ import { UsuarioController } from './usuarioController.js';
 
 // Vistas
 import { renderDashboardView } from '../views/dashboardView.js';
-import { renderReportesView } from '../views/reportesView.js';
-import { renderConfiguracionView } from '../views/configuracionView.js';
-import { renderUsuariosView } from '../views/usuariosView.js';
 
 export const MainController = {
   activeController: null,
@@ -29,29 +34,129 @@ export const MainController = {
     this.updateClock();
     setInterval(() => this.updateClock(), 1000);
     this.bindGlobalEvents();
-    
-    // 2. Registrar la visita dinámicamente en Supabase al inicializar la app
-    await this.incrementarContadorVisitas();
-    
-    // Verificación inicial y periódica de alertas SCADA
-    await this.checkSystemAlerts();
-    this.alertCheckInterval = setInterval(() => this.checkSystemAlerts(), 10000);
 
-    // Escuchar eventos de resolución para actualizar contadores
-    window.addEventListener('alerta-resuelta', () => this.checkSystemAlerts());
-
-    // Carga inicial
-    await this.navigateTo('dashboard');
+    // Verificación de Autenticación
+    if (AuthController.isAuthenticated()) {
+      this.showAppLayout();
+      await this.incrementarContadorVisitas();
+      await this.initScadaServices();
+      await this.navigateTo('dashboard');
+    } else {
+      this.showLoginView();
+    }
   },
 
   /**
-   * Consulta las alertas de la BD, actualiza el badge de la Navbar y reproduce sonido si hay nuevas alertas
+   * Renderiza e inicializa los layouts principales (Sidebar y Navbar)
+   * y aplica el fondo oscuro al contenedor principal
+   */
+  showAppLayout() {
+    const sidebar = document.getElementById('app-sidebar');
+    const navbar = document.getElementById('app-navbar');
+    const mainContent = document.getElementById('main-content');
+
+    // Asegurar fondo oscuro en el contenedor principal para evitar bordes claros
+    if (mainContent) {
+      mainContent.className = 'bg-slate-950 text-slate-100 min-h-screen';
+    }
+
+    // Renderizar y mostrar Sidebar y Navbar
+    if (sidebar) {
+      sidebar.innerHTML = renderSidebar();
+      sidebar.style.display = 'block';
+    }
+    if (navbar) {
+      navbar.innerHTML = renderNavbar();
+      navbar.style.display = 'block';
+    }
+  },
+
+  /**
+   * Oculta completamente el layout principal (destruye contenido y style.display = 'none')
+   * y renderiza únicamente la vista de Login en pantalla completa
+   */
+  showLoginView() {
+    const sidebar = document.getElementById('app-sidebar');
+    const navbar = document.getElementById('app-navbar');
+    const mainContent = document.getElementById('main-content');
+
+    // Detener intervalo de verificaciones en segundo plano
+    if (this.alertCheckInterval) {
+      clearInterval(this.alertCheckInterval);
+      this.alertCheckInterval = null;
+    }
+
+    // Ocultar y limpiar componentes del layout
+    if (sidebar) {
+      sidebar.innerHTML = '';
+      sidebar.style.display = 'none';
+    }
+    if (navbar) {
+      navbar.innerHTML = '';
+      navbar.style.display = 'none';
+    }
+
+    // Renderizar vista de Login en el contenedor principal
+    if (mainContent) {
+      mainContent.innerHTML = renderLogin();
+      this.bindLoginEvents();
+    }
+  },
+
+  /**
+   * Vincula los eventos del formulario de Login
+   */
+  bindLoginEvents() {
+    const form = document.getElementById('form-login');
+    const btnQuick = document.getElementById('btn-quick-login');
+
+    const executeLogin = async () => {
+      AuthController.login();
+      this.showAppLayout();
+      await this.incrementarContadorVisitas();
+      await this.initScadaServices();
+      await this.navigateTo('dashboard');
+    };
+
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        executeLogin();
+      });
+    }
+
+    if (btnQuick) {
+      btnQuick.addEventListener('click', () => {
+        executeLogin();
+      });
+    }
+  },
+
+  /**
+   * Inicializa las verificaciones en segundo plano para alertas del sistema SCADA
+   */
+  async initScadaServices() {
+    await this.checkSystemAlerts();
+    if (!this.alertCheckInterval) {
+      this.alertCheckInterval = setInterval(() => this.checkSystemAlerts(), 10000);
+    }
+
+    window.removeEventListener('alerta-resuelta', this.handleAlertaResuelta);
+    window.addEventListener('alerta-resuelta', this.handleAlertaResuelta);
+  },
+
+  handleAlertaResuelta() {
+    MainController.checkSystemAlerts();
+  },
+
+  /**
+   * Consulta las alertas activas en Supabase, actualiza el Navbar y emite un tono de advertencia
    */
   async checkSystemAlerts() {
     try {
       const activas = await AlertaModel.obtenerActivas();
-      const count = activas.length;
-      
+      const count = activas ? activas.length : 0;
+
       const badge = document.getElementById('nav-alert-badge');
       if (badge) {
         badge.textContent = count;
@@ -62,7 +167,6 @@ export const MainController = {
         }
       }
 
-      // Si se detectaron nuevas alertas activas respecto al chequeo anterior
       if (count > this.previousAlertCount && this.previousAlertCount !== 0) {
         this.playAlertSound();
       }
@@ -73,9 +177,6 @@ export const MainController = {
     }
   },
 
-  /**
-   * Emite un tono sintético tipo Alarma SCADA mediante Web Audio API
-   */
   playAlertSound() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -97,7 +198,7 @@ export const MainController = {
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
     } catch (e) {
-      console.warn("Audio Context bloqueado o no soportado en este navegador.");
+      console.warn('Audio Context bloqueado o no soportado en este navegador.');
     }
   },
 
@@ -111,18 +212,29 @@ export const MainController = {
 
   bindGlobalEvents() {
     document.body.addEventListener('click', (e) => {
+      // Evento Logout
+      const btnLogout = e.target.closest('#btn-logout');
+      if (btnLogout) {
+        AuthController.logout();
+        this.showLoginView();
+        return;
+      }
+
+      // Navegación mediante items con data-target
       const navItem = e.target.closest('[data-target]');
       if (navItem) {
         const targetView = navItem.getAttribute('data-target');
         this.navigateTo(targetView);
       }
 
+      // Comando de voz
       const voiceBtn = e.target.closest('#btn-voice-command');
       if (voiceBtn && voiceCtrl) {
         voiceCtrl.toggleListening();
       }
     });
 
+    // Menú desplegable responsive en pantallas pequeñas
     const toggleBtn = document.getElementById('toggle-sidebar-btn');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -194,7 +306,6 @@ export const MainController = {
 
   async loadDashboard(container) {
     try {
-      // 3. Cargar datos en paralelo desde Supabase (incluyendo el conteo dinámico de VisitaModel)
       const [turnoActivo, surtidores, alertasActivas, kpisHoy, ultimasVentas, ventasPorHora, totalVisitas] = await Promise.all([
         VentaModel.obtenerTurnoActivo(),
         surtidorModel.obtenerTodos(),
@@ -205,7 +316,6 @@ export const MainController = {
         VisitaModel.obtenerTotalVisitas()
       ]);
 
-      // Mapear y formatear ventas para la vista
       const salesFormatted = (ultimasVentas || []).map(v => ({
         id: `#V-${v.id}`,
         placa: v.placa_vehiculo || 'S/P',
@@ -217,14 +327,12 @@ export const MainController = {
         hora: new Date(v.fecha_hora).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
       }));
 
-      // Mapear surtidores
       const surtidoresFormatted = (surtidores || []).map(s => ({
         nombre: s.nombre,
         tipo: s.tanques_surtirsoft?.combustibles_surtirsoft?.nombre || 'General',
         estado: s.estado
       }));
 
-      // 4. Asignar KPIs con los datos reales obtenidos
       const kpis = {
         ingresos: `${(kpisHoy?.totalIngresos || 0).toFixed(2)} Bs`,
         ventas: kpisHoy?.totalVentas || 0,
@@ -233,20 +341,17 @@ export const MainController = {
         visitas: totalVisitas || 1
       };
 
-      // Renderizar vista HTML
       container.innerHTML = renderDashboardView(salesFormatted, surtidoresFormatted, kpis, alertasActivas || []);
 
-      // Inicializar Gráficos con datos dinámicos
       this.initChartsDinamicos(ventasPorHora || { labels: [], values: [] }, surtidores || []);
 
-      // Evento para el botón de refrescar manualmente
       const btnRefresh = document.getElementById('btn-refresh-dash');
       if (btnRefresh) {
         btnRefresh.onclick = () => this.loadDashboard(container);
       }
 
     } catch (error) {
-      console.error("Error al cargar el Dashboard dinámico:", error);
+      console.error('Error al cargar el Dashboard dinámico:', error);
       container.innerHTML = `<div class="p-6 text-red-400">Error al consultar la base de datos para el Dashboard.</div>`;
     }
   },
@@ -254,7 +359,6 @@ export const MainController = {
   initChartsDinamicos(ventasHora, surtidores) {
     if (typeof Plotly === 'undefined') return;
 
-    // Configuración de Ventas por Hora (Línea)
     const chartIngresos = document.getElementById('chart-ingresos');
     if (chartIngresos) {
       const xData = ventasHora.labels && ventasHora.labels.length > 0 ? ventasHora.labels : ['08:00', '10:00', '12:00', '14:00', '16:00'];
@@ -297,7 +401,6 @@ export const MainController = {
       });
     }
 
-    // Configuración de Distribución por Surtidores (Pastel)
     const chartCombustible = document.getElementById('chart-combustible');
     if (chartCombustible) {
       const tiposCombustible = {};
@@ -329,7 +432,6 @@ export const MainController = {
       });
     }
 
-    // Forzar ajuste de tamaño para corregir la navegación entre rutas
     setTimeout(() => {
       if (chartIngresos) Plotly.Plots.resize(chartIngresos);
       if (chartCombustible) Plotly.Plots.resize(chartCombustible);
@@ -337,7 +439,8 @@ export const MainController = {
   },
 
   /**
-   * 5. Registra la visita en Supabase (evita registros duplicados en la misma sesión/pestaña)
+   * Registra la visita en Supabase (evita duplicados en la sesión)
+   * y actualiza de inmediato la etiqueta dinámica `#sidebar-visitas-count` en el Sidebar.
    */
   async incrementarContadorVisitas() {
     try {
@@ -345,8 +448,17 @@ export const MainController = {
         await VisitaModel.registrarVisita();
         sessionStorage.setItem('surtirsoft_visita_registrada', 'true');
       }
+
+      const totalVisitas = await VisitaModel.obtenerTotalVisitas();
+
+      const visitsBadge = document.getElementById('sidebar-visitas-count');
+      if (visitsBadge) {
+        visitsBadge.textContent = totalVisitas || 1;
+      }
     } catch (error) {
-      console.error('Error al registrar la visita en Supabase:', error);
+      console.error('Error al registrar o cargar las visitas en Supabase:', error);
+      const visitsBadge = document.getElementById('sidebar-visitas-count');
+      if (visitsBadge) visitsBadge.textContent = '1';
     }
   }
 };

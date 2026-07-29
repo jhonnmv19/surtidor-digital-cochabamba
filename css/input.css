@@ -214,3 +214,19 @@ body { background: var(--bg-main); color: var(--text-primary); font-family: 'Int
   border-color: var(--btn-primary);
   box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
 }
+
+/* css/input.css */
+html, body {
+  background-color: #020617 !important; /* Slate 950 ultra oscuro */
+  color: #f8fafc;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Forzar que el contenedor principal sea oscuro */
+#main-content {
+  background-color: #020617;
+  min-height: 100vh;
+}

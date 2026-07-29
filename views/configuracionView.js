@@ -1,37 +1,21 @@
-// views/configuracionView.js
-
 export function renderConfiguracionView(data = {}) {
   const combustibles = data.combustibles || [];
   const tanques = data.tanques || [];
   const estacion = data.estacion || {};
 
-  const getPrecio = (cod, def) => combustibles.find(c => c.codigo === cod)?.precio_unidad ?? def;
-  
-  const getCapacidadTanque = (cod, def) => {
-    const comb = combustibles.find(c => c.codigo === cod);
-    if (!comb) return { id: '', capacidad: def };
-    const t = tanques.find(tk => tk.combustible_id === comb.id);
-    return t ? { id: t.id, capacidad: t.capacidad_total } : { id: '', capacidad: def };
-  };
-
-  const tGE = getCapacidadTanque('GE', 15000);
-  const tGP = getCapacidadTanque('GP', 10000);
-  const tDO = getCapacidadTanque('DO', 20000);
-  const tGNB = getCapacidadTanque('GNB', 5000);
-
   return `
   <div id="view-configuracion" class="page-view max-w-7xl mx-auto">
-    <!-- Header de la sección -->
+    <!-- Header -->
     <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
       <div>
         <h1 class="text-2xl font-bold text-white tracking-wide flex items-center gap-2">
           <i class="fa-solid fa-sliders text-sky-400"></i> Configuración del Sistema
         </h1>
-        <p class="text-xs text-slate-400 mt-1">Gestión de parámetros operacionales y sincronización con Supabase</p>
+        <p class="text-xs text-slate-400 mt-1">Gestión de parámetros operacionales sincronizados con Supabase</p>
       </div>
     </div>
 
-    <!-- Navegación por Pestañas (Config Tabs) -->
+    <!-- Pestañas de Navegación -->
     <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-3">
       <button class="config-tab active" onclick="switchConfigTab('precios', this)">
         <i class="fa-solid fa-tags"></i> Precios Combustible
@@ -47,100 +31,41 @@ export function renderConfiguracionView(data = {}) {
       </button>
     </div>
 
-    <!-- Tab 1: Precios -->
+    <!-- Tab 1: Precios (Renderizado Dinámico) -->
     <div id="config-precios" class="config-panel">
       <form id="form-config-precios" class="glass-card p-6">
         <div class="mb-5">
           <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-coins text-sky-400"></i> Precios por Litro / m³
+            <i class="fa-solid fa-coins text-sky-400"></i> Precios por Unidad de Medida
           </h3>
-          <p class="text-xs text-slate-400">Ajuste de los valores unitarios comercializados en estación.</p>
+          <p class="text-xs text-slate-400">Valores de venta al público en bolivianos (Bs).</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Campo 1: Gasolina Especial */}
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">
-              Gasolina Especial (GE)
-            </label>
-            <div class="relative rounded-lg shadow-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span class="text-cyan-400 font-semibold sm:text-sm">Bs</span>
+          ${combustibles.length > 0 ? combustibles.map(item => `
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-slate-200">
+                ${item.nombre} (${item.codigo}) - <span class="text-xs text-slate-400">Por ${item.unidad_medida}</span>
+              </label>
+              <div class="relative rounded-lg shadow-sm">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span class="text-cyan-400 font-semibold sm:text-sm">Bs</span>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  data-combustible-id="${item.id}"
+                  value="${item.precio_unidad ?? 0}"
+                  class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm transition-all duration-200 outline-none"
+                  placeholder="0.00"
+                  required
+                />
               </div>
-              <input
-                type="number"
-                step="0.01"
-                data-codigo="GE"
-                value="${getPrecio('GE', 3.74)}"
-                className="block w-full rounded-lg border border-slate-700 bg-slate-900/80 pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm transition-all duration-200 outline-none"
-                placeholder="0.00"
-                required
-              />
             </div>
-          </div>
-
-          {/* Campo 2: Gasolina Premium */}
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">
-              Gasolina Premium (GP)
-            </label>
-            <div class="relative rounded-lg shadow-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span class="text-cyan-400 font-semibold sm:text-sm">Bs</span>
-              </div>
-              <input
-                type="number"
-                step="0.01"
-                data-codigo="GP"
-                value="${getPrecio('GP', 4.79)}"
-                className="block w-full rounded-lg border border-slate-700 bg-slate-900/80 pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm transition-all duration-200 outline-none"
-                placeholder="0.00"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Campo 3: Diésel Oil */}
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">
-              Diésel Oil (DO)
-            </label>
-            <div class="relative rounded-lg shadow-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span class="text-cyan-400 font-semibold sm:text-sm">Bs</span>
-              </div>
-              <input
-                type="number"
-                step="0.01"
-                data-codigo="DO"
-                value="${getPrecio('DO', 3.72)}"
-                className="block w-full rounded-lg border border-slate-700 bg-slate-900/80 pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm transition-all duration-200 outline-none"
-                placeholder="0.00"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Campo 4: Gas Natural Vehicular */}
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-200">
-              Gas Natural Vehicular (GNB / GNV)
-            </label>
-            <div class="relative rounded-lg shadow-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span class="text-purple-400 font-semibold sm:text-sm">Bs</span>
-              </div>
-              <input
-                type="number"
-                step="0.01"
-                data-codigo="GNB"
-                value="${getPrecio('GNB', 1.66)}"
-                className="block w-full rounded-lg border border-slate-700 bg-slate-900/80 pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 sm:text-sm transition-all duration-200 outline-none"
-                placeholder="0.00"
-                required
-              />
-            </div>
-          </div>
+          `).join('') : `
+            <p class="text-sm text-slate-400 col-span-2">No se encontraron combustibles registrados en la base de datos.</p>
+          `}
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -151,41 +76,44 @@ export function renderConfiguracionView(data = {}) {
       </form>
     </div>
 
-        <div class="mt-6 flex justify-end">
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar Precios
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Tab 2: Tanques -->
+    <!-- Tab 2: Tanques (Renderizado Dinámico) -->
     <div id="config-tanques-config" class="config-panel hidden">
       <form id="form-config-tanques" class="glass-card p-6">
         <div class="mb-5">
           <h3 class="text-base font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-cubes-stacked text-sky-400"></i> Capacidades de Tanques
           </h3>
-          <p class="text-xs text-slate-400">Configuración del volumen tope soportado por tanque en almacenamiento.</p>
+          <p class="text-xs text-slate-400">Límite tope de volumen por cada tanque en almacenamiento.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="form-group">
-            <label class="form-label">Tanque GE (Litros)</label>
-            <input type="number" data-tanque-id="${tGE.id}" class="scada-input" value="${tGE.capacidad}" step="0.01" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tanque GP (Litros)</label>
-            <input type="number" data-tanque-id="${tGP.id}" class="scada-input" value="${tGP.capacidad}" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tanque DO (Litros)</label>
-            <input type="number" data-tanque-id="${tDO.id}" class="scada-input" value="${tDO.capacidad}" step="0.01" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tanque GNV (m³)</label>
-            <input type="number" data-tanque-id="${tGNB.id}" class="scada-input" value="${tGNB.capacidad}" step="0.01" />
-          </div>
+          ${tanques.length > 0 ? tanques.map(t => {
+            const combNombre = t.combustibles_surtirsoft?.nombre || 'Combustible';
+            const um = t.combustibles_surtirsoft?.unidad_medida || 'L';
+            return `
+              <div class="form-group space-y-2">
+                <label class="block text-sm font-medium text-slate-200">
+                  ${t.nombre} (${combNombre})
+                </label>
+                <div class="relative rounded-lg shadow-sm">
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    data-tanque-id="${t.id}" 
+                    class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm outline-none" 
+                    value="${t.capacidad_total ?? 0}" 
+                    required 
+                  />
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span class="text-slate-400 font-mono text-xs">${um}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('') : `
+            <p class="text-sm text-slate-400 col-span-2">No se encontraron tanques configurados.</p>
+          `}
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -203,29 +131,29 @@ export function renderConfiguracionView(data = {}) {
           <h3 class="text-base font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-id-card text-sky-400"></i> Datos de la Estación
           </h3>
-          <p class="text-xs text-slate-400">Información legal y operativa emitida en notas de venta.</p>
+          <p class="text-xs text-slate-400">Información institucional de la estación de servicio.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="form-group">
-            <label class="form-label">Nombre Estación</label>
-            <input type="text" id="cfg-nombre" class="scada-input" value="${estacion.nombre_estacion || 'Estación Cochabamba'}" required />
+            <label class="block text-sm font-medium text-slate-200 mb-1">Nombre Estación</label>
+            <input type="text" id="cfg-nombre" class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm outline-none" value="${estacion?.nombre_estacion || ''}" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Ubicación / Ciudad</label>
-            <input type="text" id="cfg-ubicacion" class="scada-input" value="${estacion.ubicacion || 'Cochabamba, Bolivia'}" required />
+            <label class="block text-sm font-medium text-slate-200 mb-1">Ubicación / Ciudad</label>
+            <input type="text" id="cfg-ubicacion" class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm outline-none" value="${estacion?.ubicacion || ''}" required />
           </div>
           <div class="form-group">
-            <label class="form-label">NIT</label>
-            <input type="text" id="cfg-nit" class="scada-input" value="${estacion.nit || '1234567890'}" />
+            <label class="block text-sm font-medium text-slate-200 mb-1">NIT</label>
+            <input type="text" id="cfg-nit" class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm outline-none" value="${estacion?.nit || ''}" />
           </div>
           <div class="form-group">
-            <label class="form-label">Teléfono de Contacto</label>
-            <input type="text" id="cfg-telefono" class="scada-input" value="${estacion.telefono || '+591 4 4500000'}" />
+            <label class="block text-sm font-medium text-slate-200 mb-1">Teléfono de Contacto</label>
+            <input type="text" id="cfg-telefono" class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm outline-none" value="${estacion?.telefono || ''}" />
           </div>
           <div class="form-group md:col-span-2">
-            <label class="form-label">Dirección Fiscal</label>
-            <input type="text" id="cfg-direccion" class="scada-input" value="${estacion.direccion || estacion.ubicacion || 'Av. Blanco Galindo Km 6, Cochabamba'}" />
+            <label class="block text-sm font-medium text-slate-200 mb-1">Dirección Fiscal</label>
+            <input type="text" id="cfg-direccion" class="block w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2.5 text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 sm:text-sm outline-none" value="${estacion?.direccion || ''}" />
           </div>
         </div>
 
@@ -242,32 +170,28 @@ export function renderConfiguracionView(data = {}) {
       <div class="glass-card p-6">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
           <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-server text-sky-400"></i> Estado de Conexión Supabase
+            <i class="fa-solid fa-server text-sky-400"></i> Tablas de Estación Surtirsoft
           </h3>
-          <span class="badge badge-green flex items-center gap-1.5">
-            <span class="led led-green"></span> En línea
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Sincronizado
           </span>
         </div>
 
-        <div class="space-y-4">
-          <div>
-            <label class="form-label mb-2 block">Tablas Detectadas en la Base de Datos</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              ${[
-                'combustibles_surtirsoft',
-                'tanques_surtirsoft',
-                'surtidores_surtirsoft',
-                'ventas_surtirsoft',
-                'alertas_surtirsoft',
-                'configuracion_estacion_surtirsoft'
-              ].map(table => `
-                <div class="flex items-center gap-2 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
-                  <span class="led led-green"></span>
-                  <span class="text-xs text-slate-300 font-mono">${table}</span>
-                </div>
-              `).join('')}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          ${[
+            'combustibles_surtirsoft',
+            'tanques_surtirsoft',
+            'surtidores_surtirsoft',
+            'ventas_surtirsoft',
+            'alertas_surtirsoft',
+            'configuracion_estacion_surtirsoft',
+            'visitas_sistema_surtirsoft'
+          ].map(table => `
+            <div class="flex items-center gap-2.5 p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs text-slate-300 font-mono">${table}</span>
             </div>
-          </div>
+          `).join('')}
         </div>
       </div>
     </div>

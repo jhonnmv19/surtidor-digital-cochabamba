@@ -10,19 +10,18 @@
   <link rel="apple-touch-icon" href="/imagen/yautja2.png" />
   <link rel="icon" type="image/png" href="/imagen/yautja2.png" />
 
-  <!-- FontAwesome -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- FontAwesome CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   
-  <!-- Plotly.js -->
+  <!-- Librerías Externas -->
   <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS & Estilos Propios -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/input.css" />
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800">
 
   <!-- Componentes globales montados dinámicamente -->
   <div id="app-sidebar"></div>
@@ -31,44 +30,43 @@
   <!-- Contenedor Principal dinámico (Vistas) -->
   <main id="main-content"></main>
 
-  <!-- Script de Registro del Service Worker -->
+  <!-- Script del Service Worker (PWA) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // Usar '/sw.js' absoluto asegura que Vercel encuentre el archivo desde la raíz
         navigator.serviceWorker.register('/sw.js')
           .then((reg) => console.log('Service Worker en Vercel:', reg.scope))
-          .catch((err) => console.error('Error registrardo SW en Vercel:', err));
+          .catch((err) => console.error('Error al registrar SW:', err));
       });
     }
+
+    // Manejo de la instalación PWA
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      console.log('PWA lista para instalar');
+    });
   </script>
 
-<!-- Script principal de inicio (ES6 Modules) -->
-<script type="module">
-  import { renderSidebar } from '/views/componentes/sidebar.js';
-  import { renderNavbar } from '/views/componentes/navbar.js';
-  import { MainController } from '/controllers/mainController.js';
+  <!-- Script Principal de Inicio (ES6 Modules) -->
+  <script type="module">
+    import { renderSidebar } from '/views/componentes/sidebar.js';
+    import { renderNavbar } from '/views/componentes/navbar.js';
+    import { MainController } from '/controllers/mainController.js';
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('app-sidebar').innerHTML = renderSidebar();
-    document.getElementById('app-navbar').innerHTML = renderNavbar();
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Renderizar componentes globales
+      const sidebarEl = document.getElementById('app-sidebar');
+      const navbarEl = document.getElementById('app-navbar');
 
-    // Cambiar initDashboard() por init()
-    await MainController.init();
-  });
-</script>
-  <script>
-  let deferredPrompt;
+      if (sidebarEl) sidebarEl.innerHTML = renderSidebar();
+      if (navbarEl) navbarEl.innerHTML = renderNavbar();
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    // Previene que Chrome mini-infobar aparezca automáticamente
-    e.preventDefault();
-    // Guarda el evento para que pueda ser disparado cuando el usuario lo desee
-    deferredPrompt = e;
-    console.log('PWA lista para ser instalada');
-    
-    // Aquí puedes mostrar tu propio botón personalizado de instalación si lo deseas
-  });
-</script>
+      // Inicializar el controlador principal
+      await MainController.init();
+    });
+  </script>
+
 </body>
 </html>

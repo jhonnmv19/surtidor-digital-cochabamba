@@ -1,4 +1,3 @@
-// controllers/configuracionController.js
 import { ConfiguracionModel } from '../models/configuracionModel.js';
 import { renderConfiguracionView } from '../views/configuracionView.js';
 
@@ -19,11 +18,11 @@ export const ConfiguracionController = {
       
       this.bindEvents(container);
     } catch (error) {
-      console.error("Error al inicializar módulo de configuración:", error);
+      console.error("Error al inicializar configuración:", error);
       container.innerHTML = `
         <div class="m-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 flex items-center gap-3">
           <i class="fa-solid fa-triangle-exclamation text-lg"></i>
-          <span>Error al conectar con Supabase. Verifique la red o credenciales.</span>
+          <span>Error al conectar con Supabase. Verifique la conexión a Internet o las políticas de tabla.</span>
         </div>
       `;
     }
@@ -57,22 +56,22 @@ export const ConfiguracionController = {
 
   async guardarPrecios(form) {
     try {
-      const inputs = form.querySelectorAll('input[data-codigo]');
+      const inputs = form.querySelectorAll('input[data-combustible-id]');
       const promesas = [];
 
       inputs.forEach(input => {
-        const codigo = input.getAttribute('data-codigo');
+        const id = input.getAttribute('data-combustible-id');
         const precio = input.value;
-        if (codigo && precio) {
-          promesas.push(ConfiguracionModel.actualizarPrecioCombustible(codigo, precio));
+        if (id && precio !== '') {
+          promesas.push(ConfiguracionModel.actualizarPrecioCombustible(id, precio));
         }
       });
 
       await Promise.all(promesas);
-      this.mostrarToast('Precios actualizados correctamente', 'success');
+      this.mostrarToast('Precios de combustibles actualizados correctamente', 'success');
     } catch (error) {
       console.error("Error al actualizar precios:", error);
-      this.mostrarToast('Error al registrar en Supabase', 'error');
+      this.mostrarToast('Error al actualizar precios en la base de datos', 'error');
     }
   },
 
@@ -84,16 +83,16 @@ export const ConfiguracionController = {
       inputs.forEach(input => {
         const id = input.getAttribute('data-tanque-id');
         const capacidad = input.value;
-        if (id && capacidad) {
+        if (id && capacidad !== '') {
           promesas.push(ConfiguracionModel.actualizarCapacidadTanque(id, capacidad));
         }
       });
 
       await Promise.all(promesas);
-      this.mostrarToast('Capacidades de tanques sincronizadas', 'success');
+      this.mostrarToast('Capacidades de tanques actualizadas con éxito', 'success');
     } catch (error) {
-      console.error("Error al guardar tanques:", error);
-      this.mostrarToast('Error al actualizar tanques', 'error');
+      console.error("Error al actualizar tanques:", error);
+      this.mostrarToast('Error al guardar capacidades de tanques', 'error');
     }
   },
 
@@ -101,7 +100,7 @@ export const ConfiguracionController = {
     try {
       const estacionId = this.datosActuales?.estacion?.id;
       if (!estacionId) {
-        this.mostrarToast('No se encontró el registro de la estación', 'error');
+        this.mostrarToast('No se encontró el ID de la estación para actualizar', 'error');
         return;
       }
 
@@ -114,10 +113,10 @@ export const ConfiguracionController = {
       };
 
       await ConfiguracionModel.actualizarDatosEstacion(estacionId, datos);
-      this.mostrarToast('Datos institucionales guardados', 'success');
+      this.mostrarToast('Datos de la estación guardados exitosamente', 'success');
     } catch (error) {
-      console.error("Error al guardar datos de estación:", error);
-      this.mostrarToast('Error al actualizar la estación', 'error');
+      console.error("Error al actualizar datos de la estación:", error);
+      this.mostrarToast('Error al guardar datos de la estación', 'error');
     }
   },
 
