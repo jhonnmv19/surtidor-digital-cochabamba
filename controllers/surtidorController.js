@@ -12,13 +12,20 @@ export const SurtidorController = {
 
   async cargarSurtidores() {
     try {
-      // Cargar en paralelo surtidores y tanques para la asignación
-      const [surtidores, tanques] = await Promise.all([
+      // Carga paralela de Surtidores, Tanques y Despachos de hoy
+      const [surtidores, tanques, despachosHoyMap] = await Promise.all([
         surtidorModel.obtenerTodos(),
-        surtidorModel.obtenerTanques()
+        surtidorModel.obtenerTanques(),
+        surtidorModel.obtenerDespachosHoy()
       ]);
 
-      surtidoresView.render(surtidores, tanques, this.container);
+      // Inyectar el campo despachoHoy en cada objeto de surtidor
+      const surtidoresConDespacho = surtidores.map(s => ({
+        ...s,
+        despachoHoy: despachosHoyMap[s.id] || 0
+      }));
+
+      surtidoresView.render(surtidoresConDespacho, tanques, this.container);
       this.bindEvents();
     } catch (error) {
       console.error("Error al cargar módulo de surtidores:", error);
@@ -28,31 +35,23 @@ export const SurtidorController = {
     }
   },
 
-async alternarEstadoRapido(id, estadoActual) {
-  try {
-    // 1. Determinar el nuevo estado
-    const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
-    
-    // 2. Actualizar en base de datos / API
-    await surtidorModel.actualizarEstado(id, nuevoEstado);
-    
-    // 3. Recargar la lista/UI
-    await this.cargarSurtidores();
-    
-    // 4. Feedback visual de éxito (Toast discreto en esquina superior derecha)
-    ScadaAlert.toast(
-      `Surtidor ID #${id} cambiado a [${nuevoEstado.toUpperCase()}]`,
-      'success'
-    );
-
-  } catch (error) {
-    // 5. Alerta modal de error crítica (Sombra resplandeciente roja + LED rojo)
-    ScadaAlert.error(
-      `No se pudo cambiar el estado del surtidor #${id}: ${error.message}`,
-      'FALLO DE CONEXIÓN SCADA'
-    );
-  }
-},
+  async alternarEstadoRapido(id, estadoActual) {
+    try {
+      const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+      await surtidorModel.actualizarEstado(id, nuevoEstado);
+      await this.cargarSurtidores();
+      
+      ScadaAlert.toast(
+        `Surtidor ID #${id} cambiado a [${nuevoEstado.toUpperCase()}]`,
+        'success'
+      );
+    } catch (error) {
+      ScadaAlert.error(
+        `No se pudo cambiar el estado del surtidor #${id}: ${error.message}`,
+        'FALLO DE CONEXIÓN SCADA'
+      );
+    }
+  },
 
   bindEvents() {
     const modal = document.getElementById('modal-editar-surtidor');
@@ -60,7 +59,6 @@ async alternarEstadoRapido(id, estadoActual) {
     const btnCancelar = document.getElementById('btn-cancelar-modal');
     const btnCancelarX = document.getElementById('btn-cancelar-modal-x');
 
-    // Delegación de eventos para capturar el clic en el botón de edición
     if (this.container) {
       this.container.onclick = (e) => {
         const btnEdit = e.target.closest('[data-action="modificar-estado"]');
@@ -79,69 +77,53 @@ async alternarEstadoRapido(id, estadoActual) {
           if (elEstado) elEstado.value = estado;
 
           surtidoresView.poblarSelectTanques(tanqueId);
-
           modal?.classList.remove('hidden');
         }
       };
     }
 
-    // Funciones para cerrar modal
     const cerrarModal = () => modal?.classList.add('hidden');
     btnCancelar?.addEventListener('click', cerrarModal);
     btnCancelarX?.addEventListener('click', cerrarModal);
 
-   // Guardar cambios en base de datos
-if (form) {
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    
-    // Captura de valores del formulario
-    const id = document.getElementById('edit-surtidor-id')?.value;
-    const nombre = document.getElementById('edit-surtidor-nombre')?.value;
-    const tanque_id = document.getElementById('edit-surtidor-tanque')?.value;
-    const estado = document.getElementById('edit-surtidor-estado')?.value;
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('edit-surtidor-id')?.value;
+        const nombre = document.getElementById('edit-surtidor-nombre')?.value;
+        const tanque_id = document.getElementById('edit-surtidor-tanque')?.value;
+        const estado = document.getElementById('edit-surtidor-estado')?.value;
 
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
 
-    try {
-      // 1. Efecto visual de procesamiento en el botón
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span class="led led-blue"></span> GUARDANDO...`;
-      }
+        try {
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="led led-blue"></span> GUARDANDO...`;
+          }
 
-      // 2. Petición para actualizar en base de datos
-      await surtidorModel.actualizarSurtidor(id, { nombre, tanque_id, estado });
+          await surtidorModel.actualizarSurtidor(id, { nombre, tanque_id, estado });
+          cerrarModal();
+          await this.cargarSurtidores();
 
-      // 3. Cerrar el modal de edición
-      cerrarModal();
-
-      // 4. Recargar datos de la vista
-      await this.cargarSurtidores();
-
-      // 5. Notificación flotante de éxito
-      ScadaAlert.toast(
-        `Surtidor "${nombre}" actualizado correctamente`,
-        'success'
-      );
-
-    } catch (err) {
-      // 6. Alerta modal de error con estilo SCADA crítico
-      ScadaAlert.error(
-        `No se pudieron guardar los cambios: ${err.message}`,
-        'ERROR DE ACTUALIZACIÓN'
-      );
-
-    } finally {
-      // Restablecer el estado original del botón
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-      }
-    }
-  };
-
+          ScadaAlert.toast(
+            `Surtidor "${nombre}" actualizado correctamente`,
+            'success'
+          );
+        } catch (err) {
+          ScadaAlert.error(
+            `No se pudieron guardar los cambios: ${err.message}`,
+            'ERROR DE ACTUALIZACIÓN'
+          );
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+          }
+        }
+      };
     }
   }
 };

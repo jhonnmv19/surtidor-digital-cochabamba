@@ -1,5 +1,4 @@
 import { supabase } from '../config/supabase.js';
-
 export const surtidorModel = {
   // 1. Obtener todos los surtidores con la información de su tanque y combustible asignado
   async obtenerTodos() {
@@ -28,7 +27,34 @@ export const surtidorModel = {
     return data || [];
   },
 
-  // 2. Obtener lista de tanques disponibles para asignar al surtidor en el formulario de edición
+  // 2. Obtener la suma total de volumen despachado HOY agrupado por surtidor
+  async obtenerDespachosHoy() {
+    // Definir el inicio del día (00:00:00 local)
+    const inicioHoy = new Date();
+    inicioHoy.setHours(0, 0, 0, 0);
+
+    // Consulta a tu tabla SQL ventas_surtirsoft filtrando por fecha_hora
+    const { data, error } = await supabase
+      .from('ventas_surtirsoft')
+      .select('surtidor_id, cantidad')
+      .gte('fecha_hora', inicioHoy.toISOString());
+
+    if (error) {
+      console.error("Error al obtener despachos de hoy:", error);
+      return {};
+    }
+
+    // Mapear y acumular los totales por surtidor_id
+    const totalesPorSurtidor = {};
+    (data || []).forEach(venta => {
+      const id = venta.surtidor_id;
+      totalesPorSurtidor[id] = (totalesPorSurtidor[id] || 0) + Number(venta.cantidad || 0);
+    });
+
+    return totalesPorSurtidor;
+  },
+
+  // 3. Obtener lista de tanques disponibles
   async obtenerTanques() {
     const { data, error } = await supabase
       .from('tanques_surtirsoft')
@@ -46,7 +72,7 @@ export const surtidorModel = {
     return data || [];
   },
 
-  // 3. Actualizar datos completos del surtidor (Nombre, Estado y Tanque/Combustible)
+  // 4. Actualizar datos completos del surtidor
   async actualizarSurtidor(id, datos) {
     const { data, error } = await supabase
       .from('surtidores_surtirsoft')
@@ -66,7 +92,7 @@ export const surtidorModel = {
     return data;
   },
 
-  // 4. Cambio rápido de estado (Activo <-> Inactivo)
+  // 5. Cambio rápido de estado (Activo <-> Inactivo)
   async actualizarEstado(id, nuevoEstado) {
     const { data, error } = await supabase
       .from('surtidores_surtirsoft')
