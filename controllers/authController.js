@@ -1,18 +1,20 @@
 // controllers/authController.js
-
 export const AuthController = {
-  // Verifica si el usuario inició sesión
   isAuthenticated() {
-    return localStorage.getItem('scada_logged_in') === 'true';
+    return localStorage.getItem('scada_session') === 'true';
   },
 
-  // Iniciar sesión
-  login() {
-    localStorage.setItem('scada_logged_in', 'true');
+  async login(email, password) {
+    // Si usas Supabase Auth:
+    // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // if (error) return false;
+
+    // Si es simulación local:
+    localStorage.setItem('scada_session', 'true');
+    return true;
   },
 
-  // Cerrar sesión
   logout() {
-    localStorage.removeItem('scada_logged_in');
+    localStorage.removeItem('scada_session');
   }
 };

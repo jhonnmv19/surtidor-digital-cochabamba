@@ -21,7 +21,7 @@ import { voiceCtrl } from './voiceController.js';
 import { ReporteController } from './reporteController.js';
 import { ConfiguracionController } from './configuracionController.js';
 import { UsuarioController } from './usuarioController.js';
-import { ScadaAlert } from '/config/scadaAlert.js';
+import { ScadaAlert } from '../config/scadaAlert.js';
 
 // Vistas
 import { renderDashboardView } from '../views/dashboardView.js';
@@ -82,58 +82,94 @@ export const MainController = {
     const navbar = document.getElementById('app-navbar');
     const mainContent = document.getElementById('main-content');
 
-    // Detener intervalo de verificaciones y sirena en segundo plano
     if (this.alertCheckInterval) {
-      clearInterval(this.alertCheckInterval);
-      this.alertCheckInterval = null;
+        clearInterval(this.alertCheckInterval);
+        this.alertCheckInterval = null;
     }
     this.stopAlarmLoop();
 
-    // Ocultar y limpiar componentes del layout
     if (sidebar) {
-      sidebar.innerHTML = '';
-      sidebar.style.display = 'none';
+        sidebar.innerHTML = '';
+        sidebar.style.display = 'none';
     }
     if (navbar) {
-      navbar.innerHTML = '';
-      navbar.style.display = 'none';
+        navbar.innerHTML = '';
+        navbar.style.display = 'none';
     }
 
-    // Renderizar vista de Login en el contenedor principal
     if (mainContent) {
-      mainContent.innerHTML = renderLogin();
-      this.bindLoginEvents();
+        mainContent.innerHTML = renderLogin();
+        // Le damos un respiro al event loop para asegurar que el DOM ya existe
+        setTimeout(() => {
+            this.bindLoginEvents();
+        }, 50);
     }
-  },
-
-  /**
-   * Vincula los eventos del formulario de Login
-   */
-  bindLoginEvents() {
+},
+bindLoginEvents() {
     const form = document.getElementById('form-login');
     const btnQuick = document.getElementById('btn-quick-login');
 
-    const executeLogin = async () => {
-      AuthController.login();
-      this.showAppLayout();
-      await this.incrementarContadorVisitas();
-      await this.initScadaServices();
-      await this.navigateTo('dashboard');
+    const triggerBootSequence = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        const userVal = document.getElementById('login-user')?.value;
+        const passVal = document.getElementById('login-password')?.value;
+
+        const overlay = document.getElementById('scada-boot-overlay');
+        const progressBar = document.getElementById('boot-progress-bar');
+        const statusText = document.getElementById('boot-status-text');
+        const loginContainer = document.getElementById('login-container');
+
+        // 1. Mostrar la animación SCADA Boot
+        if (overlay && progressBar && statusText) {
+            overlay.classList.remove('hidden');
+
+            const steps = [
+                { percent: '30%', text: 'Estableciendo enlace Supabase Realtime...' },
+                { percent: '65%', text: 'Sincronizando sensores de tanques...' },
+                { percent: '85%', text: 'Cargando módulos SCADA Cochabamba...' },
+                { percent: '100%', text: '¡Acceso Concedido! Inicializando UI...' }
+            ];
+
+            for (const step of steps) {
+                progressBar.style.width = step.percent;
+                statusText.textContent = step.text;
+                await new Promise((res) => setTimeout(res, 180));
+            }
+
+            if (loginContainer) {
+                loginContainer.classList.remove('animate-boot-in');
+                loginContainer.classList.add('animate-boot-out');
+                await new Promise((res) => setTimeout(res, 250));
+            }
+        }
+
+        // 2. Autenticar y actualizar la sesión
+        await AuthController.login(userVal, passVal);
+
+        // 3. Montar la estructura principal (Sidebar + Navbar)
+        this.showAppLayout();
+
+        // 4. Redirigir directamente al Dashboard
+        await this.navigateTo('dashboard');
+
+        // 5. Cargar servicios secundarios en segundo plano (sin bloquear)
+        this.incrementarContadorVisitas().catch(err => console.warn('Visita err:', err));
+        this.initScadaServices().catch(err => console.warn('Services err:', err));
     };
 
+    // Escuchadores de eventos seguros mediante addEventListener
     if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        executeLogin();
-      });
+        form.addEventListener('submit', triggerBootSequence);
     }
 
     if (btnQuick) {
-      btnQuick.addEventListener('click', () => {
-        executeLogin();
-      });
+        btnQuick.addEventListener('click', triggerBootSequence);
     }
-  },
+},
 
   /**
    * Inicializa las verificaciones en segundo plano para alertas del sistema SCADA
