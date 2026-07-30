@@ -1,5 +1,3 @@
-// controllers/mainController.js
-
 // Importaciones de Autenticación y Vistas Generales
 import { renderLogin } from '../views/loginView.js';
 import { AuthController } from './authController.js';
@@ -30,14 +28,13 @@ export const MainController = {
   activeController: null,
   alertCheckInterval: null,
   previousAlertCount: 0,
-  audioInterval: null, // Guardará el bucle del sonido de la sirena
+  audioInterval: null,
 
   async init() {
     this.updateClock();
     setInterval(() => this.updateClock(), 1000);
     this.bindGlobalEvents();
 
-    // Verificación de Autenticación
     if (AuthController.isAuthenticated()) {
       this.showAppLayout();
       await this.incrementarContadorVisitas();
@@ -48,21 +45,15 @@ export const MainController = {
     }
   },
 
-  /**
-   * Renderiza e inicializa los layouts principales (Sidebar y Navbar)
-   * y aplica el fondo oscuro al contenedor principal
-   */
   showAppLayout() {
     const sidebar = document.getElementById('app-sidebar');
     const navbar = document.getElementById('app-navbar');
     const mainContent = document.getElementById('main-content');
 
-    // Asegurar fondo oscuro en el contenedor principal para evitar bordes claros
     if (mainContent) {
       mainContent.className = 'bg-slate-950 text-slate-100 min-h-screen';
     }
 
-    // Renderizar y mostrar Sidebar y Navbar
     if (sidebar) {
       sidebar.innerHTML = renderSidebar();
       sidebar.style.display = 'block';
@@ -73,107 +64,87 @@ export const MainController = {
     }
   },
 
-  /**
-   * Oculta completamente el layout principal (destruye contenido y style.display = 'none')
-   * y renderiza únicamente la vista de Login en pantalla completa
-   */
   showLoginView() {
     const sidebar = document.getElementById('app-sidebar');
     const navbar = document.getElementById('app-navbar');
     const mainContent = document.getElementById('main-content');
 
     if (this.alertCheckInterval) {
-        clearInterval(this.alertCheckInterval);
-        this.alertCheckInterval = null;
+      clearInterval(this.alertCheckInterval);
+      this.alertCheckInterval = null;
     }
     this.stopAlarmLoop();
 
     if (sidebar) {
-        sidebar.innerHTML = '';
-        sidebar.style.display = 'none';
+      sidebar.innerHTML = '';
+      sidebar.style.display = 'none';
     }
     if (navbar) {
-        navbar.innerHTML = '';
-        navbar.style.display = 'none';
+      navbar.innerHTML = '';
+      navbar.style.display = 'none';
     }
 
     if (mainContent) {
-        mainContent.innerHTML = renderLogin();
-        // Le damos un respiro al event loop para asegurar que el DOM ya existe
-        setTimeout(() => {
-            this.bindLoginEvents();
-        }, 50);
+      mainContent.innerHTML = renderLogin();
+      setTimeout(() => {
+        this.bindLoginEvents();
+      }, 50);
     }
-},
-bindLoginEvents() {
+  },
+
+  bindLoginEvents() {
     const form = document.getElementById('form-login');
     const btnQuick = document.getElementById('btn-quick-login');
 
     const triggerBootSequence = async (e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const userVal = document.getElementById('login-user')?.value;
+      const passVal = document.getElementById('login-password')?.value;
+
+      const overlay = document.getElementById('scada-boot-overlay');
+      const progressBar = document.getElementById('boot-progress-bar');
+      const statusText = document.getElementById('boot-status-text');
+      const loginContainer = document.getElementById('login-container');
+
+      if (overlay && progressBar && statusText) {
+        overlay.classList.remove('hidden');
+
+        const steps = [
+          { percent: '30%', text: 'Estableciendo enlace Supabase Realtime...' },
+          { percent: '65%', text: 'Sincronizando sensores de tanques...' },
+          { percent: '85%', text: 'Cargando módulos SCADA Cochabamba...' },
+          { percent: '100%', text: '¡Acceso Concedido! Inicializando UI...' }
+        ];
+
+        for (const step of steps) {
+          progressBar.style.width = step.percent;
+          statusText.textContent = step.text;
+          await new Promise((res) => setTimeout(res, 180));
         }
 
-        const userVal = document.getElementById('login-user')?.value;
-        const passVal = document.getElementById('login-password')?.value;
-
-        const overlay = document.getElementById('scada-boot-overlay');
-        const progressBar = document.getElementById('boot-progress-bar');
-        const statusText = document.getElementById('boot-status-text');
-        const loginContainer = document.getElementById('login-container');
-
-        // 1. Mostrar la animación SCADA Boot
-        if (overlay && progressBar && statusText) {
-            overlay.classList.remove('hidden');
-
-            const steps = [
-                { percent: '30%', text: 'Estableciendo enlace Supabase Realtime...' },
-                { percent: '65%', text: 'Sincronizando sensores de tanques...' },
-                { percent: '85%', text: 'Cargando módulos SCADA Cochabamba...' },
-                { percent: '100%', text: '¡Acceso Concedido! Inicializando UI...' }
-            ];
-
-            for (const step of steps) {
-                progressBar.style.width = step.percent;
-                statusText.textContent = step.text;
-                await new Promise((res) => setTimeout(res, 180));
-            }
-
-            if (loginContainer) {
-                loginContainer.classList.remove('animate-boot-in');
-                loginContainer.classList.add('animate-boot-out');
-                await new Promise((res) => setTimeout(res, 250));
-            }
+        if (loginContainer) {
+          loginContainer.classList.remove('animate-boot-in');
+          loginContainer.classList.add('animate-boot-out');
+          await new Promise((res) => setTimeout(res, 250));
         }
+      }
 
-        // 2. Autenticar y actualizar la sesión
-        await AuthController.login(userVal, passVal);
+      await AuthController.login(userVal, passVal);
+      this.showAppLayout();
+      await this.navigateTo('dashboard');
 
-        // 3. Montar la estructura principal (Sidebar + Navbar)
-        this.showAppLayout();
-
-        // 4. Redirigir directamente al Dashboard
-        await this.navigateTo('dashboard');
-
-        // 5. Cargar servicios secundarios en segundo plano (sin bloquear)
-        this.incrementarContadorVisitas().catch(err => console.warn('Visita err:', err));
-        this.initScadaServices().catch(err => console.warn('Services err:', err));
+      this.incrementarContadorVisitas().catch(err => console.warn('Visita err:', err));
+      this.initScadaServices().catch(err => console.warn('Services err:', err));
     };
 
-    // Escuchadores de eventos seguros mediante addEventListener
-    if (form) {
-        form.addEventListener('submit', triggerBootSequence);
-    }
+    if (form) form.addEventListener('submit', triggerBootSequence);
+    if (btnQuick) btnQuick.addEventListener('click', triggerBootSequence);
+  },
 
-    if (btnQuick) {
-        btnQuick.addEventListener('click', triggerBootSequence);
-    }
-},
-
-  /**
-   * Inicializa las verificaciones en segundo plano para alertas del sistema SCADA
-   */
   async initScadaServices() {
     await this.checkSystemAlerts();
     if (!this.alertCheckInterval) {
@@ -188,35 +159,28 @@ bindLoginEvents() {
     MainController.checkSystemAlerts();
   },
 
-  /**
-   * Consulta las alertas activas en Supabase, actualiza el Navbar
-   * y lanza el modal bloqueante con alarma si existen alertas de nivel crítico.
-   */
   async checkSystemAlerts() {
     try {
       const activas = await AlertaModel.obtenerActivas();
       const count = activas ? activas.length : 0;
 
-      // Actualizar badge del Navbar
       const badge = document.getElementById('nav-alert-badge');
-      if (badge) {
-        badge.textContent = count;
-        if (count === 0) {
-          badge.classList.add('hidden');
-        } else {
-          badge.classList.remove('hidden');
-        }
-      }
+      const sidebarBadge = document.getElementById('alert-badge');
 
-      // Filtrar únicamente alertas de nivel 'critico'
+      [badge, sidebarBadge].forEach(b => {
+        if (b) {
+          b.textContent = count;
+          if (count === 0) b.classList.add('hidden');
+          else b.classList.remove('hidden');
+        }
+      });
+
       const alertasCriticas = (activas || []).filter(a => a.nivel === 'critico');
 
       if (alertasCriticas.length > 0) {
-        // Mostrar Modal de Alarma de Pantalla Completa
         this.mostrarModalAlertasCriticas(alertasCriticas);
         this.startAlarmLoop();
       } else {
-        // Si no hay alertas críticas, remover el modal si estaba abierto y detener alarma
         this.cerrarModalAlertas();
       }
 
@@ -226,13 +190,99 @@ bindLoginEvents() {
     }
   },
 
-  /**
-   * Genera e inserta el Modal de pantalla completa en el DOM
-   */
+  async incrementarContadorVisitas() {
+    try {
+      if (VisitaModel && typeof VisitaModel.registrarVisita === 'function') {
+        const total = await VisitaModel.registrarVisita();
+        const el = document.getElementById('sidebar-visitas-count');
+        if (el) el.textContent = total;
+      }
+    } catch (e) {
+      console.warn('Error registrando visita:', e);
+    }
+  },
+
+  async navigateTo(viewTarget) {
+    // 1. Cerrar Menú Lateral en pantallas móviles tras la selección
+    this.closeSidebarMobile();
+
+    // 2. Actualizar estado activo en los items del menú
+    const navItems = document.querySelectorAll('.nav-item[data-target]');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-target') === viewTarget) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+
+    // 3. Renderizar vista correspondiente
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) return;
+
+    switch (viewTarget) {
+      case 'dashboard':
+        if (typeof renderDashboardView === 'function') {
+          mainContent.innerHTML = renderDashboardView();
+        }
+        break;
+
+      case 'surtidores':
+        if (SurtidorController?.init) await SurtidorController.init();
+        break;
+
+      case 'tanques':
+        if (TanqueController?.init) await TanqueController.init();
+        break;
+
+      case 'registro-ventas':
+        if (VentaController?.init) await VentaController.init();
+        break;
+
+      case 'historial':
+        if (VentaController?.initHistorial) await VentaController.initHistorial();
+        break;
+
+      case 'alertas':
+        if (AlertaController?.init) await AlertaController.init();
+        break;
+
+      case 'reportes':
+        if (ReporteController?.init) await ReporteController.init();
+        break;
+
+      case 'configuracion':
+        if (ConfiguracionController?.init) await ConfiguracionController.init();
+        break;
+
+      case 'usuarios':
+        if (UsuarioController?.init) await UsuarioController.init();
+        break;
+
+      default:
+        console.warn(`Vista desconocida: ${viewTarget}`);
+        break;
+    }
+  },
+
+  /* Métodos auxiliares para la gestión responsive del Sidebar */
+  openSidebarMobile() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('-translate-x-full');
+    if (overlay) overlay.classList.remove('hidden');
+  },
+
+  closeSidebarMobile() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.add('-translate-x-full');
+    if (overlay) overlay.classList.add('hidden');
+  },
+
   mostrarModalAlertasCriticas(alertas) {
     let modal = document.getElementById('scada-critical-alert-modal');
 
-    // Construcción del HTML de las alertas dentro del modal
     const alertasItemsHTML = alertas.map(a => `
       <div class="bg-rose-950/80 border border-rose-500/60 p-3 rounded-lg flex items-start gap-3 shadow-lg">
         <div class="w-3 h-3 rounded-full bg-rose-500 animate-ping mt-1 flex-shrink-0"></div>
@@ -246,9 +296,7 @@ bindLoginEvents() {
 
     const modalHTML = `
       <div id="scada-critical-alert-modal" class="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="max-w-lg w-full bg-slate-900 border-2 border-rose-600 rounded-2xl shadow-2xl p-6 text-white space-y-5 animate-bounce-short">
-          
-          <!-- Encabezado Alarma -->
+        <div class="max-w-lg w-full bg-slate-900 border-2 border-rose-600 rounded-2xl shadow-2xl p-6 text-white space-y-5">
           <div class="flex items-center gap-3 border-b border-rose-800/50 pb-4">
             <div class="p-3 bg-rose-600/20 text-rose-500 rounded-full animate-pulse border border-rose-500/40">
               <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
@@ -258,22 +306,17 @@ bindLoginEvents() {
               <p class="text-xs text-slate-300">Se han detectado eventos que requieren atención inmediata.</p>
             </div>
           </div>
-
-          <!-- Lista de Alertas -->
           <div class="max-h-60 overflow-y-auto space-y-2 pr-1">
             ${alertasItemsHTML}
           </div>
-
-          <!-- Botones de Acción -->
           <div class="flex gap-3 pt-2">
-            <button id="btn-modal-go-alerts" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-lg shadow-rose-900/50 flex items-center justify-center gap-2 text-sm">
+            <button id="btn-modal-go-alerts" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm">
               <i class="fa-solid fa-arrow-right font-bold"></i> Ir a Vista de Alertas
             </button>
             <button id="btn-modal-silence" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl border border-slate-700 text-sm transition">
               Silenciar
             </button>
           </div>
-
         </div>
       </div>
     `;
@@ -287,9 +330,6 @@ bindLoginEvents() {
     }
   },
 
-  /**
-   * Vincula los eventos del modal para navegar a la sección de Alertas o silenciar
-   */
   bindModalEvents() {
     const btnGo = document.getElementById('btn-modal-go-alerts');
     const btnSilence = document.getElementById('btn-modal-silence');
@@ -316,11 +356,8 @@ bindLoginEvents() {
     if (modal) modal.remove();
   },
 
-  /**
-   * Reproductor de Sonido continuo (Sirena) con Web Audio API
-   */
   startAlarmLoop() {
-    if (this.audioInterval) return; // Evitar múltiples bucles simultáneos
+    if (this.audioInterval) return;
     this.playAlertSound();
     this.audioInterval = setInterval(() => {
       this.playAlertSound();
@@ -366,30 +403,67 @@ bindLoginEvents() {
     if (clockEl) clockEl.textContent = now.toLocaleTimeString();
     if (dateEl) dateEl.textContent = now.toLocaleDateString('es-BO', { weekday: 'short', day: '2-digit', month: 'short' });
   },
+  
+openSidebarMobile() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
 
-  bindGlobalEvents() {
-    document.body.addEventListener('click', (e) => {
-      // Evento Logout
-      const btnLogout = e.target.closest('#btn-logout');
-      if (btnLogout) {
-        AuthController.logout();
-        this.showLoginView();
-        return;
-      }
+  if (sidebar && overlay) {
+    sidebar.classList.add('open');
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+  }
+},
 
-      // Navegación mediante items con data-target
-      const navItem = e.target.closest('[data-target]');
-      if (navItem) {
-        const targetView = navItem.getAttribute('data-target');
-        this.navigateTo(targetView);
-      }
+closeSidebarMobile() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
 
-      // Comando de voz
-      const voiceBtn = e.target.closest('#btn-voice-command');
-      if (voiceBtn && voiceCtrl) {
-        voiceCtrl.toggleListening();
-      }
-    });
+  if (sidebar && overlay) {
+    sidebar.classList.remove('open');
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+  }
+},
+
+
+ bindGlobalEvents() {
+  document.body.addEventListener('click', (e) => {
+    // 1. Evento Logout
+    const btnLogout = e.target.closest('#btn-logout');
+    if (btnLogout) {
+      AuthController.logout();
+      this.showLoginView();
+      return;
+    }
+
+    // 2. Abrir menú móvil
+    if (e.target.closest('#toggle-sidebar-btn')) {
+      this.openSidebarMobile();
+      return;
+    }
+
+    // 3. Cerrar menú móvil (botón X o fondo oscuro)
+    if (e.target.closest('#close-sidebar-btn') || e.target.closest('#sidebar-overlay')) {
+      this.closeSidebarMobile();
+      return;
+    }
+
+    // 4. Navegación mediante items con data-target
+    const navItem = e.target.closest('[data-target]');
+    if (navItem) {
+      const targetView = navItem.getAttribute('data-target');
+      this.navigateTo(targetView); // navigateTo ya ejecuta closeSidebarMobile() internamente
+      return;
+    }
+
+    // 5. Comando de voz
+    const voiceBtn = e.target.closest('#btn-voice-command');
+    if (voiceBtn && voiceCtrl) {
+      voiceCtrl.toggleListening();
+    }
+  });
+
 
     // Menú desplegable responsive en pantallas pequeñas
     const toggleBtn = document.getElementById('toggle-sidebar-btn');

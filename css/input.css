@@ -16,77 +16,144 @@
   --warning: #F59E0B;
   --critical: #EF4444;
   --accent: #38BDF8;
+  --sidebar-width: 260px;
+  --header-height: 60px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg-main); color: var(--text-primary); font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; overflow-x: hidden; }
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
+
+html, body {
+  background-color: #020617 !important; /* Slate 950 ultra oscuro */
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  width: 100%;
+}
 
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0F172A; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
 
-/* ── SIDEBAR ── */
+/* ── SIDEBAR ADAPTABLE ── */
 #sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
+  position: fixed; 
+  left: 0; 
+  top: 0; 
+  bottom: 0; 
+  width: var(--sidebar-width);
   background: linear-gradient(180deg, #0D1B2A 0%, #0F172A 100%);
   border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  z-index: 50; transition: transform 0.3s ease;
+  display: flex; 
+  flex-direction: column;
+  z-index: 50; 
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-#sidebar.open { transform: translateX(0) !important; }
+
 .sidebar-logo {
   padding: 20px 16px 16px;
   border-bottom: 1px solid var(--border);
   background: linear-gradient(135deg, rgba(14,165,233,0.08), transparent);
 }
+
 .nav-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 20px; cursor: pointer; transition: all 0.2s;
-  border-left: 3px solid transparent; color: var(--text-secondary);
-  font-size: 0.875rem; font-weight: 500;
+  display: flex; 
+  align-items: center; 
+  gap: 12px;
+  padding: 11px 20px; 
+  cursor: pointer; 
+  transition: all 0.2s;
+  border-left: 3px solid transparent; 
+  color: var(--text-secondary);
+  font-size: 0.875rem; 
+  font-weight: 500;
 }
+
 .nav-item:hover { background: rgba(14,165,233,0.1); color: #fff; border-left-color: var(--btn-primary); }
 .nav-item.active { background: rgba(14,165,233,0.15); color: var(--btn-primary); border-left-color: var(--btn-primary); }
 .nav-item i { width: 18px; text-align: center; font-size: 0.9rem; }
 .nav-section { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; color: #475569; padding: 16px 20px 6px; text-transform: uppercase; }
 
-/* ── HEADER ── */
+/* ── HEADER ADAPTABLE ── */
 #header {
-  position: fixed; left: 260px; right: 0; top: 0; height: 60px;
-  background: rgba(15,23,42,0.95); backdrop-filter: blur(12px);
+  position: fixed; 
+  left: var(--sidebar-width); 
+  right: 0; 
+  top: 0; 
+  height: var(--header-height);
+  background: rgba(15,23,42,0.95); 
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; z-index: 40;
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+  padding: 0 24px; 
+  z-index: 40;
+  transition: left 0.3s ease;
 }
 
-/* ── MAIN CONTENT ── */
-#main-content { margin-left: 260px; padding-top: 60px; min-height: 100vh; }
-.page-view { display: block; padding: 24px; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* ── MAIN CONTENT ADAPTABLE ── */
+#main-content { 
+  margin-left: var(--sidebar-width); 
+  padding-top: var(--header-height); 
+  min-height: 100vh;
+  background-color: #020617;
+  transition: margin-left 0.3s ease;
+}
+
+.page-view { 
+  display: block; 
+  padding: 24px; 
+  animation: fadeIn 0.3s ease; 
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(8px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
 
 /* ── GLASS CARD ── */
 .glass-card {
   background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.8));
-  border: 1px solid var(--border); border-radius: 12px;
-  backdrop-filter: blur(8px); transition: all 0.25s ease;
+  border: 1px solid var(--border); 
+  border-radius: 12px;
+  backdrop-filter: blur(8px); 
+  transition: all 0.25s ease;
 }
 .glass-card:hover { border-color: rgba(14,165,233,0.4); box-shadow: 0 0 20px rgba(14,165,233,0.08); }
 
 /* ── KPI CARD ── */
 .kpi-card {
   background: linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.9));
-  border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-  transition: all 0.3s; cursor: default; position: relative; overflow: hidden;
+  border: 1px solid var(--border); 
+  border-radius: 12px; 
+  padding: 20px;
+  transition: all 0.3s; 
+  cursor: default; 
+  position: relative; 
+  overflow: hidden;
 }
 .kpi-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  content: ''; 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  height: 2px;
   background: var(--accent-color, var(--btn-primary));
 }
 
 /* ── LED INDICATORS ── */
 .led {
-  width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  width: 10px; 
+  height: 10px; 
+  border-radius: 50%; 
+  display: inline-block;
   animation: ledPulse 2s infinite;
 }
 .led-green { background: #10B981; box-shadow: 0 0 8px #10B981; }
@@ -94,14 +161,19 @@ body { background: var(--bg-main); color: var(--text-primary); font-family: 'Int
 .led-red { background: #EF4444; box-shadow: 0 0 8px #EF4444; animation: ledBlink 0.8s infinite; }
 .led-blue { background: #38BDF8; box-shadow: 0 0 8px #38BDF8; }
 .led-off { background: #374151; box-shadow: none; animation: none; }
+
 @keyframes ledPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 @keyframes ledBlink { 0%,100% { opacity:1; } 50% { opacity:0; } }
 
 /* ── SURTIDOR CARD ── */
 .surtidor-card {
   background: linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.9));
-  border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-  transition: all 0.3s; position: relative; overflow: hidden;
+  border: 1px solid var(--border); 
+  border-radius: 12px; 
+  padding: 20px;
+  transition: all 0.3s; 
+  position: relative; 
+  overflow: hidden;
 }
 .surtidor-card.active-state { border-color: rgba(16,185,129,0.4); }
 .surtidor-card.maint-state { border-color: rgba(245,158,11,0.4); }
@@ -116,14 +188,19 @@ body { background: var(--bg-main); color: var(--text-primary); font-family: 'Int
 .badge-blue { background: rgba(14,165,233,0.15); color: #0EA5E9; border: 1px solid rgba(14,165,233,0.3); }
 
 /* ── BUTTONS ── */
-.btn { font-size: 0.78rem; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn { font-size: 0.78rem; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-primary { background: var(--btn-primary); color: #fff; }
 .btn-primary:hover { background: var(--btn-hover); transform: translateY(-1px); }
 .btn-ghost { background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid var(--border); }
 .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
-/* ── TABLE ── */
-.data-table { width: 100%; border-collapse: collapse; }
+/* ── TABLE RESPONSIVE ── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.data-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
 .data-table th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748B; padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; }
 .data-table td { padding: 11px 14px; border-bottom: 1px solid rgba(51,65,85,0.5); font-size: 0.82rem; color: var(--text-secondary); }
 .data-table tr:hover td { background: rgba(14,165,233,0.04); }
@@ -136,26 +213,9 @@ body { background: var(--bg-main); color: var(--text-primary); font-family: 'Int
 .alert-item { border-left: 3px solid; padding: 14px 16px; border-radius: 0 8px 8px 0; background: rgba(15,23,42,0.6); margin-bottom: 10px; }
 .alert-critical { border-color: #EF4444; }
 
-@media (max-width: 768px) {
-  #sidebar { transform: translateX(-100%); }
-  #main-content { margin-left: 0; }
-  #header { left: 0; }
-}
-
-/* ── ESTILOS DE FORMULARIO SCADA (INDEPENDIENTE DEL NAVEGADOR) ── */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+/* ── FORMULARIOS SCADA ── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 
 .scada-input {
   width: 100%;
@@ -202,46 +262,13 @@ body { background: var(--bg-main); color: var(--text-primary); font-family: 'Int
   transition: all 0.2s ease;
 }
 
-.config-tab:hover {
-  background: rgba(14, 165, 233, 0.1);
-  color: #FFF;
-  border-color: var(--btn-primary);
-}
+.config-tab:hover { background: rgba(14, 165, 233, 0.1); color: #FFF; border-color: var(--btn-primary); }
+.config-tab.active { background: var(--btn-primary); color: #FFF; border-color: var(--btn-primary); box-shadow: 0 0 12px rgba(14, 165, 233, 0.3); }
 
-.config-tab.active {
-  background: var(--btn-primary);
-  color: #FFF;
-  border-color: var(--btn-primary);
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
-}
-
-/* css/input.css */
-html, body {
-  background-color: #020617 !important; /* Slate 950 ultra oscuro */
-  color: #f8fafc;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  width: 100%;
-}
-
-/* Forzar que el contenedor principal sea oscuro */
-#main-content {
-  background-color: #020617;
-  min-height: 100vh;
-}
 /* ===================== ALERTS & NOTIFICATIONS (SCADA) ===================== */
-
-/* Animaciones de entrada y pulso */
 @keyframes scadaAlertIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes criticalGlow {
@@ -249,7 +276,6 @@ html, body {
   50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 15px rgba(239, 68, 68, 0.4); }
 }
 
-/* Tarjeta base de Alerta */
 .scada-alert-box {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.95)) !important;
   border: 1px solid var(--border);
@@ -260,42 +286,13 @@ html, body {
   padding: 20px !important;
 }
 
-/* Variación Crítica / Error */
-.scada-alert-box.alert-error {
-  border-color: rgba(239, 68, 68, 0.8) !important;
-  animation: scadaAlertIn 0.25s ease, criticalGlow 2s infinite !important;
-}
+.scada-alert-box.alert-error { border-color: rgba(239, 68, 68, 0.8) !important; animation: scadaAlertIn 0.25s ease, criticalGlow 2s infinite !important; }
+.scada-alert-box.alert-success { border-color: rgba(16, 185, 129, 0.8) !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.25) !important; }
+.scada-alert-box.alert-warning { border-color: rgba(245, 158, 11, 0.8) !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important; }
 
-/* Variación Éxito */
-.scada-alert-box.alert-success {
-  border-color: rgba(16, 185, 129, 0.8) !important;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25) !important;
-}
+.scada-alert-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.03em; text-transform: uppercase; color: #FFF !important; }
+.scada-alert-content { font-family: 'Courier New', monospace; color: var(--text-secondary) !important; font-size: 0.9rem; margin-top: 8px; }
 
-/* Variación Advertencia */
-.scada-alert-box.alert-warning {
-  border-color: rgba(245, 158, 11, 0.8) !important;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important;
-}
-
-/* Encabezado y Texto de Alerta */
-.scada-alert-title {
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: #FFF !important;
-}
-
-.scada-alert-content {
-  font-family: 'Courier New', monospace;
-  color: var(--text-secondary) !important;
-  font-size: 0.9rem;
-  margin-top: 8px;
-}
-
-/* Botones dentro de la alerta */
 .scada-alert-btn {
   background: var(--btn-primary) !important;
   color: #FFF !important;
@@ -308,58 +305,20 @@ html, body {
   box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
   transition: all 0.2s ease;
 }
-
-.scada-alert-btn:hover {
-  background: var(--btn-hover) !important;
-  box-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
-}
-
-
+.scada-alert-btn:hover { background: var(--btn-hover) !important; box-shadow: 0 0 15px rgba(14, 165, 233, 0.6); }
 
 /* ===================== ANIMACIONES SCADA BOOT ===================== */
+@keyframes scadaScanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(1000%); } }
+@keyframes scadaGlow { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.08); } }
+@keyframes bootZoomOut { 0% { opacity: 0; transform: scale(1.15); filter: blur(10px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
+@keyframes bootZoomIn { 0% { opacity: 1; transform: scale(1); filter: blur(0); } 100% { opacity: 0; transform: scale(1.2); filter: blur(15px); } }
 
-/* Efecto de escáner industrial de arriba a abajo */
-@keyframes scadaScanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
-}
-
-/* Pulso cibernético para la luz ambiental */
-@keyframes scadaGlow {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.08); }
-}
-
-/* Transición tipo "Shutter Opening" estilo Netflix/OS */
-@keyframes bootZoomOut {
-  0% { opacity: 0; transform: scale(1.15); filter: blur(10px); }
-  100% { opacity: 1; transform: scale(1); filter: blur(0); }
-}
-
-@keyframes bootZoomIn {
-  0% { opacity: 1; transform: scale(1); filter: blur(0); }
-  100% { opacity: 0; transform: scale(1.2); filter: blur(15px); }
-}
-
-.animate-scanline {
-  animation: scadaScanline 3s linear infinite;
-}
-
-.animate-glow-pulse {
-  animation: scadaGlow 4s ease-in-out infinite;
-}
-
-.animate-boot-in {
-  animation: bootZoomOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-boot-out {
-  animation: bootZoomIn 0.6s cubic-bezier(0.7, 0, 0.84, 0) forwards;
-}
+.animate-scanline { animation: scadaScanline 3s linear infinite; }
+.animate-glow-pulse { animation: scadaGlow 4s ease-in-out infinite; }
+.animate-boot-in { animation: bootZoomOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-boot-out { animation: bootZoomIn 0.6s cubic-bezier(0.7, 0, 0.84, 0) forwards; }
 
 /* ===================== EFECTOS HOLOGRÁFICOS & LOGIN IMPACT ===================== */
-
-/* Malla Cyber de líneas diagonales transparentes */
 .cyber-grid-bg {
   background-image: 
     radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08) 0%, transparent 80%),
@@ -371,33 +330,15 @@ html, body {
   background-size: 100% 100%, 30px 30px, 30px 30px, 30px 30px, 30px 30px;
 }
 
-/* Animación de flujo continuo para las líneas del fondo */
-@keyframes cyberLinesMove {
-  0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
-  100% { background-position: 0 0, 60px 60px, -60px 60px, 60px -60px, -60px -60px; }
-}
+@keyframes cyberLinesMove { 0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; } 100% { background-position: 0 0, 60px 60px, -60px 60px, 60px -60px, -60px -60px; } }
+.animate-cyber-lines { animation: cyberLinesMove 20s linear infinite; }
 
-.animate-cyber-lines {
-  animation: cyberLinesMove 20s linear infinite;
-}
-
-/* Resplandor orbital para el Logo */
 @keyframes logoPulseGlow {
-  0%, 100% { 
-    filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.4)) drop-shadow(0 0 30px rgba(14, 165, 233, 0.2)); 
-    transform: scale(1); 
-  }
-  50% { 
-    filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 50px rgba(14, 165, 233, 0.5)); 
-    transform: scale(1.03); 
-  }
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.4)) drop-shadow(0 0 30px rgba(14, 165, 233, 0.2)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 50px rgba(14, 165, 233, 0.5)); transform: scale(1.03); }
 }
+.animate-logo-glow { animation: logoPulseGlow 3.5s ease-in-out infinite; }
 
-.animate-logo-glow {
-  animation: logoPulseGlow 3.5s ease-in-out infinite;
-}
-
-/* Borde de tarjeta Neón que parpadea sutilmente */
 .neon-glass-card {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(16px);
@@ -413,7 +354,7 @@ html, body {
   top: -1px; left: -1px; right: -1px; bottom: -1px;
   border-radius: inherit;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.5), transparent 40%, transparent 60%, rgba(16, 185, 129, 0.4));
-  pointer-events-none: none;
+  pointer-events: none;
   z-index: 1;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -421,22 +362,53 @@ html, body {
   padding: 1px;
 }
 
-/* Asegura que el overlay no intercepte clicks si está oculto */
 #scada-boot-overlay.hidden {
   display: none !important;
   pointer-events: none !important;
 }
 
-.neon-glass-card::before {
-  content: '';
-  position: absolute;
-  top: -1px; left: -1px; right: -1px; bottom: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.5), transparent 40%, transparent 60%, rgba(16, 185, 129, 0.4));
-  pointer-events: none; /* <--- AQUÍ ESTABA EL ERROR EN EL CSS */
-  z-index: 1;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  padding: 1px;
+/* ===================== MEDIA QUERIES PARA ADAPTABILIDAD RESPONSIVA ===================== */
+
+/* Dispositivos Médianos y Pequeños (Tablets y Móviles) */
+@media (max-width: 1024px) {
+  #sidebar {
+    transform: translateX(-100%);
+    box-shadow: 10px 0 25px rgba(0, 0, 0, 0.5);
+  }
+  
+  #sidebar.open {
+    transform: translateX(0) !important;
+  }
+  
+  #header {
+    left: 0 !important;
+    padding: 0 16px;
+  }
+  
+  #main-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* Solo para Dispositivos Móviles */
+@media (max-width: 640px) {
+  .page-view {
+    padding: 16px;
+  }
+
+  .kpi-card, .surtidor-card {
+    padding: 14px;
+  }
+
+  .scada-alert-box {
+    padding: 14px !important;
+  }
+
+  .scada-alert-title {
+    font-size: 0.95rem;
+  }
+
+  .scada-alert-content {
+    font-size: 0.8rem;
+  }
 }
